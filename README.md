@@ -95,8 +95,8 @@ A full-stack web application for managing exchange tractors with an internal das
    ```
 2. Open `.env.local` and paste your values:
    ```
-   REACT_APP_SUPABASE_URL=https://your-project-id.supabase.co
-   REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOi...your-key-here
+   VITE_SUPABASE_URL=https://your-project-id.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOi...your-key-here
    ```
 
 ### Step 7 — Install & Run Locally
@@ -125,8 +125,8 @@ The app opens at `http://localhost:3000`
 2. Go to [vercel.com](https://vercel.com) and sign in with GitHub
 3. Click **New Project** → import your repo
 4. Under **Environment Variables**, add:
-   - `REACT_APP_SUPABASE_URL` → your Supabase URL
-   - `REACT_APP_SUPABASE_ANON_KEY` → your Supabase anon key
+   - `VITE_SUPABASE_URL` → your Supabase URL
+   - `VITE_SUPABASE_ANON_KEY` → your Supabase anon key
 5. Click **Deploy**
 
 Your app will be live at `https://your-app-name.vercel.app`
@@ -139,7 +139,7 @@ Your app will be live at `https://your-app-name.vercel.app`
 2. Go to [netlify.com](https://netlify.com) → **Add new site → Import from Git**
 3. Set build command: `npm run build`
 4. Set publish directory: `build`
-5. Add environment variables (same as above)
+5. Add environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
 6. Deploy
 
 ---

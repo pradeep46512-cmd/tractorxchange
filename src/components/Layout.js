@@ -118,10 +118,6 @@ export default function Layout({ session }) {
           <MarketIcon size={22} />
           <span>Market</span>
         </a>
-        <button onClick={handleLogout}>
-          <LogoutIcon />
-          <span>Sign Out</span>
-        </button>
       </nav>
 
     </div>
