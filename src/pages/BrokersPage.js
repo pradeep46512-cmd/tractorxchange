@@ -82,8 +82,9 @@ export default function BrokersPage() {
                     <td><span className={`tag ${b.is_active ? 'tag-green' : 'tag-gray'}`}>{b.is_active ? 'Active' : 'Inactive'}</span></td>
                     <td>
                       <div className="flex gap-8">
-                        <a href={`https://wa.me/${(b.whatsapp||b.phone||'').replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa">💬</a>
-                        <button className="btn btn-sm" onClick={() => openEdit(b)}>Edit</button>
+                        <a href={`https://wa.me/...`} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa">💬</a>
+<a href={`tel:${b.phone}`} className="btn btn-sm btn-call">📞</a>
+<button className="btn btn-sm" onClick={() => openEdit(b)}>Edit</button>
                         <button className="btn btn-sm btn-danger" onClick={() => handleDelete(b.id)}>✕</button>
                       </div>
                     </td>

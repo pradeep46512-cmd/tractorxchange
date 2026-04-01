@@ -73,7 +73,7 @@ export default function DealersPage() {
                     <td><span className={`tag ${d.is_active ? 'tag-green' : 'tag-gray'}`}>{d.is_active ? 'Active' : 'Inactive'}</span></td>
                     <td>
                       <div className="flex gap-8">
-                        <a href={`tel:${d.phone}`} className="btn btn-sm">📞</a>
+                        <a href={`tel:${d.phone}`} className="btn btn-sm btn-call">📞 Call</a>
                         {d.whatsapp && <a href={`https://wa.me/${d.whatsapp.replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa">💬</a>}
                         <button className="btn btn-sm" onClick={() => openEdit(d)}>Edit</button>
                         <button className="btn btn-sm btn-danger" onClick={() => handleDelete(d.id)}>✕</button>

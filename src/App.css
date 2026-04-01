@@ -68,6 +68,8 @@ body {
 .btn-danger:hover { background: #b83a3a; }
 .btn-wa { background: #25D366; color: #fff; border-color: #25D366; }
 .btn-wa:hover { background: #1aaa52; }
+.btn-call { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+.btn-call:hover { background: #1557b0; }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
 .btn-icon { padding: 6px; border-radius: var(--radius-sm); }
 

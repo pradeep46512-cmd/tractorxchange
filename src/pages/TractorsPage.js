@@ -85,8 +85,9 @@ export default function TractorsPage() {
                   <div className="tcard-meta">{t.year} · {t.hours_used} · {t.engine_hp ? t.engine_hp + ' HP · ' : ''}{t.location_text}</div>
                   <div className="tcard-price">{PRICE_FMT(t.expected_price)}</div>
                   <div className="tcard-actions">
-                    <button className="btn btn-sm btn-wa" onClick={e => shareWA(e, t)}>💬 WhatsApp</button>
-                    <button className="btn btn-sm" onClick={e => copyLink(e, t)}>🔗 Link</button>
+                   <button className="btn btn-sm btn-wa" onClick={e => shareWA(e, t)}>💬 WhatsApp</button>
+<a className="btn btn-sm btn-call" href={`tel:${t.phone}`} onClick={e => e.stopPropagation()}>📞 Call</a>
+<button className="btn btn-sm" onClick={e => copyLink(e, t)}>🔗 Link</button>
                     <button className="btn btn-sm btn-danger" style={{ marginLeft: 'auto' }} onClick={e => handleDelete(e, t.id)}>✕</button>
                   </div>
                 </div>
