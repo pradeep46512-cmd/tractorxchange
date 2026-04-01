@@ -31,6 +31,13 @@ const MarketIcon = ({ size = 16 }) => (
     <circle cx="11.5" cy="13.5" r="1" stroke="currentColor" strokeWidth="1.3"/>
   </svg>
 );
+const EnquiryIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    <line x1="9" y1="10" x2="15" y2="10"/>
+    <line x1="9" y1="14" x2="13" y2="14"/>
+  </svg>
+);
 const LogoutIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
@@ -68,6 +75,9 @@ export default function Layout({ session }) {
           <NavLink to="/dealers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
             <StoreIcon size={16} /> Dealers
           </NavLink>
+          <NavLink to="/enquiries" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+            <EnquiryIcon size={16} /> Enquiries
+          </NavLink>
           <a href="/marketplace" target="_blank" rel="noreferrer" className="nav-link">
             <MarketIcon size={16} /> Marketplace ↗
           </a>
@@ -95,6 +105,10 @@ export default function Layout({ session }) {
         <NavLink to="/brokers" className={({ isActive }) => isActive ? 'active' : ''}>
           <PeopleIcon size={22} />
           <span>Brokers</span>
+        </NavLink>
+        <NavLink to="/enquiries" className={({ isActive }) => isActive ? 'active' : ''}>
+          <EnquiryIcon size={22} />
+          <span>Enquiries</span>
         </NavLink>
         <NavLink to="/dealers" className={({ isActive }) => isActive ? 'active' : ''}>
           <StoreIcon size={22} />

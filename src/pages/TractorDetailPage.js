@@ -54,18 +54,26 @@ export default function TractorDetailPage() {
     }
   };
 
+  const MAX_PHOTOS = 5;
+
   const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) { alert('Maximum 5 photos allowed. Delete one to add more.'); return; }
+    const toUpload = files.slice(0, remaining);
+    if (files.length > remaining) alert(`Only ${remaining} more photo(s) allowed. Uploading first ${remaining}.`);
     setUploading(true);
     try {
-      const url = await uploadPhoto(id, file);
-      const isCover = photos.length === 0;
-      const { data } = await supabase.from('tractor_photos').insert([{ tractor_id: id, photo_url: url, is_cover: isCover }]).select().single();
-      if (isCover) { await updateTractor(id, { cover_photo: url }); setTractor(prev => ({ ...prev, cover_photo: url })); }
-      setPhotos(prev => [...prev, data]);
+      for (const file of toUpload) {
+        const url = await uploadPhoto(id, file);
+        const isCover = photos.length === 0;
+        const { data } = await supabase.from('tractor_photos').insert([{ tractor_id: id, photo_url: url, is_cover: isCover }]).select().single();
+        if (isCover) { await updateTractor(id, { cover_photo: url }); setTractor(prev => ({ ...prev, cover_photo: url })); }
+        setPhotos(prev => [...prev, data]);
+      }
     } catch (err) { alert(err.message); }
-    finally { setUploading(false); }
+    finally { setUploading(false); e.target.value = ''; }
   };
 
   const deleteDoc = async (docId) => {
@@ -142,11 +150,11 @@ export default function TractorDetailPage() {
                   <button className="photo-delete" onClick={() => deletePhoto(ph)}>✕</button>
                 </div>
               ))}
-              <div className="photo-thumb" style={{ cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--gray-100)', fontSize:22, color:'var(--gray-400)' }} onClick={() => photoRef.current?.click()}>
-                +
+              <div className="photo-thumb" style={{ cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--gray-100)', fontSize:14, color:'var(--gray-400)', flexDirection:'column', gap:2 }} onClick={() => photos.length < 5 && photoRef.current?.click()}>
+                <span style={{fontSize:20}}>+</span><span style={{fontSize:10}}>{photos.length}/5</span>
               </div>
             </div>
-            <input ref={photoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={handlePhotoUpload} />
+            <input ref={photoRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handlePhotoUpload} />
 
             {/* Documents */}
             <div className="card" style={{ marginTop: 16 }}>

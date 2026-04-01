@@ -79,6 +79,40 @@ function rowsToRecords(rows, colMap) {
   return records;
 }
 
+// ── Generate & download template xlsx ────────────────────
+function downloadTemplate(type) {
+  const XLSX = window.XLSX;
+  if (!XLSX) { alert('Excel library not loaded yet, please wait a moment and try again.'); return; }
+
+  const brokerHeaders = [
+    ['name *', 'phone *', 'whatsapp number', 'email', 'location (city, state)', 'speciality (brands)', 'active (yes/no)', 'notes'],
+    ['Ramesh Yadav', '+91 98765 43210', '919876543210', 'ramesh@email.com', 'Jaipur, Rajasthan', 'Mahindra, Swaraj', 'yes', 'Sample row'],
+  ];
+
+  const dealerHeaders = [
+    ['dealership name *', 'contact person', 'phone *', 'whatsapp number', 'email', 'city *', 'state', 'brands handled', 'active (yes/no)', 'notes'],
+    ['Agro Mitra Tractors', 'Vijay Sharma', '+91 99887 76655', '919998877665', 'agro@email.com', 'Jaipur', 'Rajasthan', 'Mahindra, Swaraj', 'yes', 'Sample row'],
+  ];
+
+  const data = type === 'brokers' ? brokerHeaders : dealerHeaders;
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Bold header row styling
+  const headerLen = data[0].length;
+  for (let col = 0; col < headerLen; col++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (!ws[cellRef]) continue;
+    ws[cellRef].s = { font: { bold: true }, fill: { fgColor: { rgb: 'E1F5EE' } } };
+  }
+
+  // Auto column widths
+  ws['!cols'] = data[0].map((h, i) => ({ wch: Math.max(h.length + 4, (data[1]?.[i] || '').length + 2) }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, type === 'brokers' ? 'Brokers' : 'Dealers');
+  XLSX.writeFile(wb, `${type}_import_template.xlsx`);
+}
+
 // ── Main component ────────────────────────────────────────
 export default function BulkImportModal({ type, onClose, onDone }) {
   // type = 'brokers' | 'dealers'
@@ -180,16 +214,17 @@ export default function BulkImportModal({ type, onClose, onDone }) {
                 <strong>Use the template</strong> — download it below, fill in your contacts, then upload here. Both .xlsx and .csv are supported.
               </div>
 
-              {/* Template download links */}
+              {/* Template download */}
               <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                <a
-                  href={type === 'brokers' ? '/templates/brokers_import_template.xlsx' : '/templates/dealers_import_template.xlsx'}
+                <button
+                  type="button"
                   className="btn"
                   style={{ flex: 1, justifyContent: 'center' }}
-                  download
+                  onClick={() => downloadTemplate(type)}
                 >
-                  📥 Download {type === 'brokers' ? 'Broker' : 'Dealer'} Template (.xlsx)
-                </a>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download {type === 'brokers' ? 'Broker' : 'Dealer'} Template (.xlsx)
+                </button>
               </div>
 
               {/* Drop zone */}

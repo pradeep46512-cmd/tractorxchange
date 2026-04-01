@@ -6,6 +6,7 @@ import TractorsPage from './pages/TractorsPage';
 import TractorDetailPage from './pages/TractorDetailPage';
 import BrokersPage from './pages/BrokersPage';
 import DealersPage from './pages/DealersPage';
+import EnquiriesPage from './pages/EnquiriesPage';
 import MarketplacePage from './pages/MarketplacePage';
 import PublicTractorPage from './pages/PublicTractorPage';
 import LoginPage from './pages/LoginPage';
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="tractors/:id" element={<TractorDetailPage />} />
           <Route path="brokers" element={<BrokersPage />} />
           <Route path="dealers" element={<DealersPage />} />
+          <Route path="enquiries" element={<EnquiriesPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTractors, deleteTractor } from '../lib/supabase';
 import TractorModal from '../components/TractorModal';
+import { exportTractorsToExcel } from '../lib/exportToExcel';
 
 const PRICE_FMT = (n) => n ? '₹' + Number(n).toLocaleString('en-IN') : '—';
 
@@ -61,6 +62,10 @@ export default function TractorsPage() {
             <option>Pending</option>
             <option>Sold</option>
           </select>
+          <button className="btn" onClick={() => exportTractorsToExcel(tractors)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Excel
+          </button>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Tractor</button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -147,4 +147,52 @@ export async function updateDealer(id, updates) {
 export async function deleteDealer(id) {
   const { error } = await supabase.from('dealers').delete().eq('id', id);
   if (error) throw error;
+}
+
+// ── Enquiries ─────────────────────────────────────────────
+export async function getEnquiries() {
+  const { data, error } = await supabase
+    .from('enquiries')
+    .select(`*, tractors(id, make, model, year, expected_price, cover_photo, status)`)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createEnquiry(enquiry) {
+  const { data, error } = await supabase
+    .from('enquiries')
+    .insert([enquiry])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateEnquiry(id, updates) {
+  const { data, error } = await supabase
+    .from('enquiries')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteEnquiry(id) {
+  const { error } = await supabase.from('enquiries').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function markTractorSoldToEnquiry(tractorId, enquiryId) {
+  await updateTractor(tractorId, { status: 'Sold' });
+  const { data, error } = await supabase
+    .from('enquiries')
+    .update({ status: 'Sold', sold_at: new Date().toISOString() })
+    .eq('id', enquiryId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
