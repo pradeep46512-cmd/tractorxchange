@@ -194,3 +194,119 @@ body {
 .login-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px; width: 100%; max-width: 380px; text-align: center; }
 .login-card h1 { font-size: 22px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
 .login-card p { color: var(--gray-400); font-size: 13px; margin-bottom: 28px; }
+
+/* ── Bottom nav (mobile only) ── */
+.bottom-nav { display: none; }
+
+/* ── Bottom nav — hidden on desktop, shown on mobile ── */
+.bottom-nav { display: none; }
+
+/* ════════════════════════════════════
+   MOBILE RESPONSIVE — max 768px
+   ════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Hide desktop sidebar completely */
+  .sidebar { display: none !important; }
+
+  /* App shell becomes full-width column */
+  .app-shell { flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* Main area fills screen, leave room at bottom for nav bar */
+  .main-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 64px; }
+
+  /* Topbar — stack vertically, smaller padding */
+  .topbar { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+  .topbar h2 { font-size: 15px; }
+  .topbar-actions { width: 100%; flex-wrap: wrap; gap: 6px; }
+  .topbar-actions .search-input { width: 100%; flex: 1; min-width: 0; }
+  .topbar-actions .form-select { flex: 1; min-width: 100px; }
+  .topbar-actions .btn-primary { width: 100%; justify-content: center; }
+
+  /* Content padding */
+  .content { padding: 14px; }
+  .content-sm { padding: 14px; }
+
+  /* Tractor grid — single column on mobile */
+  .tractor-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Tractor cards — horizontal layout on mobile */
+  .tractor-card { display: flex; flex-direction: row; align-items: stretch; }
+  .tcard-photo { width: 120px; flex-shrink: 0; height: auto; min-height: 120px; border-radius: 0; }
+  .tcard-body { flex: 1; padding: 10px 12px; min-width: 0; }
+  .tcard-name { font-size: 13px; }
+  .tcard-meta { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tcard-price { font-size: 15px; margin-bottom: 8px; }
+
+  /* Detail page — single column */
+  .detail-layout { grid-template-columns: 1fr; gap: 14px; }
+  .stat-cards { grid-template-columns: 1fr 1fr; }
+
+  /* Tables — horizontal scroll */
+  .data-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+
+  /* Modals — slide up from bottom on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 92vh; width: 100%; max-width: 100%; }
+
+  /* Form rows stack vertically */
+  .form-row { flex-direction: column; gap: 0; }
+
+  /* Share bar */
+  .share-url-bar { flex-wrap: wrap; }
+
+  /* Public pages */
+  .public-header { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+  .public-header h1 { font-size: 15px; }
+  .public-header .btn { font-size: 12px; padding: 6px 10px; }
+  .public-content { padding: 14px; }
+
+  /* Photo grid — smaller thumbnails */
+  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+
+  /* Login card */
+  .login-card { padding: 28px 20px; margin: 16px; border-radius: var(--radius-lg); }
+
+  /* Buttons in tcard */
+  .tcard-actions .btn { font-size: 12px; padding: 5px 8px; }
+
+  /* ── Bottom navigation bar ── */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+  }
+  .bottom-nav a,
+  .bottom-nav button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gray-400);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    padding: 8px 4px;
+    transition: color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav a:hover,
+  .bottom-nav button:hover { color: var(--green-dark); }
+  .bottom-nav a.active { color: var(--green-dark); }
+  .bottom-nav a.active svg,
+  .bottom-nav a.active span { color: var(--green-dark); }
+  .bottom-nav svg { width: 22px; height: 22px; flex-shrink: 0; }
+}
