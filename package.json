@@ -9,10 +9,11 @@
     "@supabase/supabase-js": "^2.39.0",
     "react-scripts": "5.0.1"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "npx react-scripts build"
-  },
+ "scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "prebuild": "chmod +x node_modules/.bin/react-scripts || true"
+},
   "browserslist": {
     "production": [">0.2%", "not dead"],
     "development": ["last 1 chrome version"]
