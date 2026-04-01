@@ -2,8 +2,9 @@ import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-const TractorIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+// Sidebar icons (small, 16px)
+const TractorIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
     <rect x="1" y="5" width="9" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="3.5" cy="12.5" r="1.5" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="9.5" cy="12.5" r="1.5" stroke="currentColor" strokeWidth="1.3"/>
@@ -11,23 +12,30 @@ const TractorIcon = () => (
     <circle cx="13.5" cy="12.5" r="1.5" stroke="currentColor" strokeWidth="1.3"/>
   </svg>
 );
-const PeopleIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+const PeopleIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
     <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.3"/>
     <path d="M2 14c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
   </svg>
 );
-const StoreIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+const StoreIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
     <rect x="1" y="8" width="14" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
     <path d="M4 8V5a4 4 0 018 0v3" stroke="currentColor" strokeWidth="1.3"/>
   </svg>
 );
-const MarketIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+const MarketIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
     <path d="M2 2h12l-1.5 7H3.5L2 2z" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="5.5" cy="13.5" r="1" stroke="currentColor" strokeWidth="1.3"/>
     <circle cx="11.5" cy="13.5" r="1" stroke="currentColor" strokeWidth="1.3"/>
+  </svg>
+);
+const LogoutIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
   </svg>
 );
 
@@ -43,6 +51,8 @@ export default function Layout({ session }) {
 
   return (
     <div className="app-shell">
+
+      {/* ── Desktop sidebar ── */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           <h1>🚜 TractorXchange</h1>
@@ -50,16 +60,16 @@ export default function Layout({ session }) {
         </div>
         <nav className="sidebar-nav">
           <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <TractorIcon /> Tractors
+            <TractorIcon size={16} /> Tractors
           </NavLink>
           <NavLink to="/brokers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <PeopleIcon /> Brokers
+            <PeopleIcon size={16} /> Brokers
           </NavLink>
           <NavLink to="/dealers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <StoreIcon /> Dealers
+            <StoreIcon size={16} /> Dealers
           </NavLink>
           <a href="/marketplace" target="_blank" rel="noreferrer" className="nav-link">
-            <MarketIcon /> Marketplace ↗
+            <MarketIcon size={16} /> Marketplace ↗
           </a>
         </nav>
         <div className="sidebar-footer">
@@ -70,9 +80,36 @@ export default function Layout({ session }) {
           <button className="btn btn-sm" style={{ width: '100%' }} onClick={handleLogout}>Sign Out</button>
         </div>
       </aside>
+
+      {/* ── Main content ── */}
       <main className="main-area">
         <Outlet />
       </main>
+
+      {/* ── Mobile bottom nav bar ── */}
+      <nav className="bottom-nav">
+        <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+          <TractorIcon size={22} />
+          <span>Tractors</span>
+        </NavLink>
+        <NavLink to="/brokers" className={({ isActive }) => isActive ? 'active' : ''}>
+          <PeopleIcon size={22} />
+          <span>Brokers</span>
+        </NavLink>
+        <NavLink to="/dealers" className={({ isActive }) => isActive ? 'active' : ''}>
+          <StoreIcon size={22} />
+          <span>Dealers</span>
+        </NavLink>
+        <a href="/marketplace" target="_blank" rel="noreferrer">
+          <MarketIcon size={22} />
+          <span>Market</span>
+        </a>
+        <button onClick={handleLogout}>
+          <LogoutIcon />
+          <span>Sign Out</span>
+        </button>
+      </nav>
+
     </div>
   );
 }
