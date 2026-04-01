@@ -249,6 +249,11 @@ body {
   .modal-overlay { padding: 0; align-items: flex-end; }
   .modal { border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 92vh; width: 100%; max-width: 100%; }
 
+  /* Modals — slide up from bottom on mobile */
+.modal-overlay { padding: 0; align-items: flex-end; }
+.modal { border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 92vh; width: 100%; max-width: 100%; }
+.modal-footer { padding-bottom: calc(64px + 16px); }
+
   /* Form rows stack vertically */
   .form-row { flex-direction: column; gap: 0; }
 
