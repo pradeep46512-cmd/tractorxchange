@@ -40,17 +40,20 @@ export default function TractorDetailPage() {
     } catch (e) { alert(e.message); }
   };
 
- const handleDocUpload = async (e) => {
+  const handleDocUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
     try {
       const newDoc = await uploadDocument(id, file);
-      setDocs(prev => [...prev, newDoc]);
+      setDocs(function(prev) { return [...prev, newDoc]; });
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
     }
-    catch (err) { alert(err.message); }
-    finally { setUploading(false); }
   };
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -117,7 +120,7 @@ export default function TractorDetailPage() {
           <select className="form-input form-select" style={{ width: 140 }} value={tractor.status} onChange={e => handleStatusChange(e.target.value)}>
             {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
           </select>
-          <button className="btn btn-wa" onClick={shareWA}>💬 Share on WhatsApp</button>
+          <button className="btn btn-wa" onClick={shareWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Share on WhatsApp</button>
         </div>
       </div>
 
@@ -150,7 +153,7 @@ export default function TractorDetailPage() {
               <div className="card-header">
                 <h3>Documents</h3>
                 <button className="btn btn-sm" onClick={() => docRef.current?.click()} disabled={uploading}>
-                  {uploading ? '…' : '+ Upload'}
+                  {uploading ? '…' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Upload'}
                 </button>
                 <input ref={docRef} type="file" style={{ display:'none' }} onChange={handleDocUpload} />
               </div>
@@ -201,11 +204,11 @@ export default function TractorDetailPage() {
               <div className="card-body">
                 <div className="share-url-bar">
                   <span>{shareUrl}</span>
-                  <button className="btn btn-sm" onClick={() => navigator.clipboard.writeText(shareUrl).then(() => alert('Copied!'))}>Copy</button>
+                  <button className="btn btn-sm" onClick={() => navigator.clipboard.writeText(shareUrl).then(() => alert('Copied!'))}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button>
                 </div>
                 <div className="flex gap-8">
-                  <button className="btn btn-wa" style={{ flex:1 }} onClick={shareWA}>💬 WhatsApp</button>
-                  <a className="btn" style={{ flex:1, justifyContent:'center' }} href={shareUrl} target="_blank" rel="noreferrer">🌐 Preview</a>
+                  <button className="btn btn-wa" style={{ flex:1 }} onClick={shareWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> WhatsApp</button>
+                  <a className="btn" style={{ flex:1, justifyContent:'center' }} href={shareUrl} target="_blank" rel="noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Preview</a>
                 </div>
               </div>
             </div>
@@ -222,7 +225,8 @@ export default function TractorDetailPage() {
                       <div style={{ fontSize:13, fontWeight:600 }}>{b.name}</div>
                       <div className="text-muted text-sm">{b.phone} · {b.location}</div>
                     </div>
-                    <a href={`https://wa.me/${b.whatsapp || b.phone?.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(`Hi ${b.name}, I have a tractor for you: ${shareUrl}`)}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa">💬</a>
+                    <a href={'https://wa.me/' + (b.whatsapp || (b.phone||'').replace(/[^0-9]/g,'')) + '?text=' + encodeURIComponent('Hi ' + b.name + ', I have a tractor for you: ' + shareUrl)} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+                    <a href={'tel:' + (b.phone||'')} className="btn btn-sm btn-call"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.18 1.18 2 2 0 012 .02h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></a>
                   </div>
                 ))}
               </div>

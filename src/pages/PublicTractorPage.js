@@ -68,8 +68,8 @@ export default function PublicTractorPage() {
           <p>{tractor.year} · {tractor.location_text}</p>
         </div>
         <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
-          <button className="btn btn-wa" onClick={shareWA}>💬 Share on WhatsApp</button>
-          <button className="btn" onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))}>🔗 Copy Link</button>
+          <button className="btn btn-wa" onClick={shareWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Share on WhatsApp</button>
+          <button className="btn" onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Link</button>
         </div>
       </div>
 
@@ -131,8 +131,8 @@ export default function PublicTractorPage() {
                 <div style={{ fontSize:28, fontWeight:800, color:'var(--green)', margin:'6px 0 12px' }}>{PRICE_FMT(tractor.expected_price)}</div>
                 <span className={`status-badge status-${tractor.status}`} style={{ marginBottom:16, display:'inline-block' }}>{tractor.status}</span>
                 <div className="flex gap-8" style={{ flexDirection:'column' }}>
-                  <button className="btn btn-wa" style={{ justifyContent:'center' }} onClick={shareWA}>💬 Enquire on WhatsApp</button>
-                  <button className="btn" style={{ justifyContent:'center' }} onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))}>🔗 Copy Listing Link</button>
+                  <button className="btn btn-wa" style={{ justifyContent:'center' }} onClick={shareWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Enquire on WhatsApp</button>
+                  <button className="btn" style={{ justifyContent:'center' }} onClick={() => navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Link</button>
                   <a href="/marketplace" className="btn" style={{ justifyContent:'center' }}>Browse More Tractors</a>
                 </div>
               </div>

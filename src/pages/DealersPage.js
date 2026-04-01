@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDealers, createDealer, updateDealer, deleteDealer } from '../lib/supabase';
+import BulkImportModal from '../components/BulkImportModal';
 
 const INIT = { name:'', contact_person:'', phone:'', whatsapp:'', email:'', city:'', state:'', brands:'', is_active:true, notes:'' };
 
@@ -10,6 +11,7 @@ export default function DealersPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(INIT);
   const [saving, setSaving] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const load = async () => { setLoading(true); try { setDealers(await getDealers()); } finally { setLoading(false); } };
   useEffect(() => { load(); }, []);
@@ -39,6 +41,7 @@ export default function DealersPage() {
       <div className="topbar">
         <h2>Dealers</h2>
         <div className="topbar-actions">
+          <button className="btn" onClick={() => setShowImport(true)}>📥 Bulk Import</button>
           <button className="btn btn-primary" onClick={openAdd}>+ Add Dealer</button>
         </div>
       </div>
@@ -73,8 +76,8 @@ export default function DealersPage() {
                     <td><span className={`tag ${d.is_active ? 'tag-green' : 'tag-gray'}`}>{d.is_active ? 'Active' : 'Inactive'}</span></td>
                     <td>
                       <div className="flex gap-8">
-                        <a href={`tel:${d.phone}`} className="btn btn-sm btn-call">📞 Call</a>
-                        {d.whatsapp && <a href={`https://wa.me/${d.whatsapp.replace(/[^0-9]/g,'')}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa">💬</a>}
+                        <a href={'tel:' + (d.phone||'')} className="btn btn-sm btn-call"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.18 1.18 2 2 0 012 .02h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Call</a>
+                        <a href={'https://wa.me/' + (d.whatsapp||d.phone||'').replace(/[^0-9]/g,'')} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> WhatsApp</a>
                         <button className="btn btn-sm" onClick={() => openEdit(d)}>Edit</button>
                         <button className="btn btn-sm btn-danger" onClick={() => handleDelete(d.id)}>✕</button>
                       </div>
@@ -87,6 +90,7 @@ export default function DealersPage() {
         </div>
       </div>
 
+      {showImport && <BulkImportModal type="dealers" onClose={() => setShowImport(false)} onDone={load} />}
       {showModal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div className="modal">

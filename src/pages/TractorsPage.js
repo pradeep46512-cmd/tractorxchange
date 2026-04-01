@@ -85,11 +85,22 @@ export default function TractorsPage() {
                   <div className="tcard-meta">{t.year} · {t.hours_used} · {t.engine_hp ? t.engine_hp + ' HP · ' : ''}{t.location_text}</div>
                   <div className="tcard-price">{PRICE_FMT(t.expected_price)}</div>
                   <div className="tcard-actions">
-                   <button className="btn btn-sm btn-wa" onClick={e => shareWA(e, t)}>💬 WhatsApp</button>
-<a className="btn btn-sm btn-call" href={`tel:${t.phone}`} onClick={e => e.stopPropagation()}>📞 Call</a>
-<button className="btn btn-sm" onClick={e => copyLink(e, t)}>🔗 Link</button>
+                    <button className="btn btn-sm btn-wa" onClick={e => shareWA(e, t)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> WhatsApp</button>
+                    <button className="btn btn-sm" onClick={e => copyLink(e, t)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link</button>
                     <button className="btn btn-sm btn-danger" style={{ marginLeft: 'auto' }} onClick={e => handleDelete(e, t.id)}>✕</button>
                   </div>
+                  {t.tractor_brokers?.length > 0 && t.tractor_brokers[0]?.brokers?.phone && (
+                    <div style={{ marginTop: 6 }}>
+                      <a
+                        className="btn btn-sm btn-call"
+                        style={{ width: '100%', justifyContent: 'center' }}
+                        href={'tel:' + t.tractor_brokers[0].brokers.phone}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.18 1.18 2 2 0 012 .02h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Call: {t.tractor_brokers[0].brokers.name}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
