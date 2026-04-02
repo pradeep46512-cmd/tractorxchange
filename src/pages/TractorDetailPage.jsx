@@ -187,10 +187,25 @@ export default function TractorDetailPage() {
 
   const shareUrl = tractor ? `${window.location.origin}/market/${tractor.share_token}` : '';
 
-  const shareWA = () => {
+  // 1. Enquiry call — fixed number
+  const enquiryCall = () => window.open('tel:+917518767671', '_self');
+
+  // 2. Enquiry on WhatsApp — sends to fixed number with stock link
+  const enquiryWA = () => {
     if (!tractor) return;
-    const msg = `🚜 *${tractor.make} ${tractor.model}* (${tractor.year})\n📍 ${tractor.location_text}\n⏱ ${tractor.hours_used}\n💰 ${PRICE_FMT(tractor.expected_price)}\n\n🔗 ${shareUrl}`;
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    const msg = `Hi, I am interested in buying this tractor.\n\n🚜 *${tractor.make} ${tractor.model}* (${tractor.year})\n📍 ${tractor.location_text}\n💰 ${PRICE_FMT(tractor.expected_price)}\n\n${shareUrl}`;
+    window.open('https://wa.me/917518767671?text=' + encodeURIComponent(msg), '_blank');
+  };
+
+  // 3. Share tractor — native share sheet or clipboard
+  const shareTractor = () => {
+    const shareData = {
+      title: `${tractor.make} ${tractor.model} (${tractor.year})`,
+      text: `${tractor.make} ${tractor.model} (${tractor.year}) — ${PRICE_FMT(tractor.expected_price)} — 📍 ${tractor.location_text}`,
+      url: shareUrl,
+    };
+    if (navigator.share) { navigator.share(shareData).catch(() => {}); }
+    else { navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied!')); }
   };
 
   if (loading) return <div className="content"><div className="spinner" /></div>;
@@ -225,7 +240,11 @@ export default function TractorDetailPage() {
               </button>
             </div>
           )}
-          <button className="btn btn-wa" onClick={shareWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Share on WhatsApp</button>
+          <div style={{ display:'flex', gap:6 }}>
+            <a className="btn btn-sm btn-call" href="tel:+917518767671"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.18 1.18 2 2 0 012 .02h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Call</a>
+            <button className="btn btn-sm btn-wa" onClick={enquiryWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Enquiry WA</button>
+            <button className="btn btn-sm" onClick={shareTractor}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+          </div>
         </div>
       </div>
 
@@ -440,17 +459,26 @@ export default function TractorDetailPage() {
               </div>
             </div>
 
-            {/* Share */}
+            {/* Share — same 3 buttons as tractor card */}
             <div className="card" style={{ marginBottom: 16 }}>
-              <div className="card-header"><h3>Share</h3></div>
+              <div className="card-header"><h3>Share & Enquiry</h3></div>
               <div className="card-body">
-                <div className="share-url-bar">
+                {/* Share URL */}
+                <div className="share-url-bar" style={{ marginBottom:10 }}>
                   <span>{shareUrl}</span>
-                  <button className="btn btn-sm" onClick={() => navigator.clipboard.writeText(shareUrl).then(() => alert('Copied!'))}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button>
+                  <button className="btn btn-sm" onClick={() => navigator.clipboard.writeText(shareUrl).then(() => alert('Copied!'))}>Copy</button>
                 </div>
-                <div className="flex gap-8">
-                  <button className="btn btn-wa" style={{ flex:1 }} onClick={shareWA}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> WhatsApp</button>
-                  <a className="btn" style={{ flex:1, justifyContent:'center' }} href={shareUrl} target="_blank" rel="noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Preview</a>
+                {/* 3 consistent buttons */}
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  <a className="btn btn-call" style={{ justifyContent:'center' }} href="tel:+917518767671">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.18 1.18 2 2 0 012 .02h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Enquiry Call
+                  </a>
+                  <button className="btn btn-wa" style={{ justifyContent:'center' }} onClick={enquiryWA}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg> Enquiry on WhatsApp
+                  </button>
+                  <button className="btn" style={{ justifyContent:'center' }} onClick={shareTractor}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share This Tractor
+                  </button>
                 </div>
               </div>
             </div>
