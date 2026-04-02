@@ -291,19 +291,25 @@ export default function TractorDetailPage() {
                     <div
                       onClick={() => setGalleryOpen(true)}
                       style={{
-                        width:'100%', paddingTop:'75%', position:'relative',
+                        width:'100%',
+                        height: 320,
                         borderRadius: 'var(--radius-lg)', overflow:'hidden',
                         background:'var(--gray-50)', border:'1px solid var(--border)',
                         cursor:'zoom-in',
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        position:'relative',
                       }}
                     >
                       <img
                         src={photos[galleryIndex ?? 0]?.photo_url}
                         alt={tractor.make + ' ' + tractor.model}
                         style={{
-                          position:'absolute', inset:0,
-                          width:'100%', height:'100%',
+                          maxWidth:'100%',
+                          maxHeight:'100%',
+                          width:'auto',
+                          height:'auto',
                           objectFit:'contain',
+                          display:'block',
                         }}
                       />
                       {/* Zoom hint */}
