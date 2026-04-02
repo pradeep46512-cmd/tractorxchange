@@ -16,7 +16,7 @@ export const supabase = createClient(
 export async function getTractors() {
   const { data, error } = await supabase
     .from('tractors')
-    .select(`*, tractor_brokers(broker_id, brokers(id, name, phone, location))`)
+    .select(`*, tractor_brokers(broker_id, brokers(id, name, phone, whatsapp, location))`)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data;

@@ -60,7 +60,7 @@ function PhotoLightbox({ photo, name, onClose }) {
 }
 
 // ── Card View ──────────────────────────────────────────────
-function CardView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, handleDelete }) {
+function CardView({ tractors, navigate, shareTractor, handleDelete }) {
   const [lightbox, setLightbox] = useState(null);
 
   return (
@@ -93,18 +93,39 @@ function CardView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, ha
                 </div>
               )}
               <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8 }}>
-                <div style={{ display:'flex', gap:6 }}>
-                  <button className="btn btn-sm btn-call" style={{ flex:1, justifyContent:'center' }} onClick={e => enquiryCall(e)}>
-                    {CALL_ICON} Enquiry Call
-                  </button>
-                  <button className="btn btn-sm btn-danger btn-icon" style={{ flexShrink:0 }} onClick={e => handleDelete(e, t.id)}>✕</button>
-                </div>
-                <button className="btn btn-sm btn-wa" style={{ width:'100%', justifyContent:'center' }} onClick={e => enquiryWA(e, t)}>
-                  {WA_ICON} Enquiry on WhatsApp
-                </button>
+
+                {/* ── Share tractor ── */}
                 <button className="btn btn-sm" style={{ width:'100%', justifyContent:'center' }} onClick={e => shareTractor(e, t)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share This Tractor
                 </button>
+
+                {/* ── WhatsApp to assigned broker(s) ── */}
+                {t.tractor_brokers?.length > 0 && t.tractor_brokers.map(tb => tb.brokers).filter(Boolean).map(b => (
+                  <a key={b.id}
+                    className="btn btn-sm btn-wa"
+                    style={{ width:'100%', justifyContent:'center' }}
+                    href={'https://wa.me/' + (b.whatsapp||b.phone||'').replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi ' + b.name + ', tractor available: ' + t.make + ' ' + t.model + ' (' + t.year + ') — ' + PRICE_FMT(t.expected_price) + ' — ' + window.location.origin + '/market/' + t.share_token)}
+                    onClick={e => e.stopPropagation()}
+                    target="_blank" rel="noreferrer"
+                  >
+                    {WA_ICON} WA Broker: {b.name}
+                  </a>
+                ))}
+
+                {/* ── Call broker(s) ── */}
+                {t.tractor_brokers?.length > 0 && t.tractor_brokers.map(tb => tb.brokers).filter(b => b?.phone).map(b => (
+                  <a key={b.id + '_call'}
+                    className="btn btn-sm btn-call"
+                    style={{ width:'100%', justifyContent:'center' }}
+                    href={'tel:' + b.phone}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {CALL_ICON} Call Broker: {b.name}
+                  </a>
+                ))}
+
+                {/* ── Delete ── */}
+                <button className="btn btn-sm btn-danger" style={{ width:'100%', justifyContent:'center' }} onClick={e => handleDelete(e, t.id)}>✕ Delete</button>
               </div>
             </div>
           </div>
@@ -123,7 +144,7 @@ function CardView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, ha
 }
 
 // ── List View ──────────────────────────────────────────────
-function ListView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, handleDelete }) {
+function ListView({ tractors, navigate, shareTractor, handleDelete }) {
   const [lightbox, setLightbox] = useState(null);
 
   return (
@@ -194,9 +215,22 @@ function ListView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, ha
                 {/* Actions */}
                 <td>
                   <div className="flex gap-8" style={{ flexWrap: 'nowrap' }}>
-                    <button className="btn btn-sm btn-call" title="Enquiry Call" onClick={e => enquiryCall(e)}>{CALL_ICON}</button>
-                    <button className="btn btn-sm btn-wa" title="Enquiry on WhatsApp" onClick={e => enquiryWA(e, t)}>{WA_ICON}</button>
-                    <button className="btn btn-sm" title="Share Tractor" onClick={e => shareTractor(e, t)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+                    <button className="btn btn-sm" title="Share Tractor" onClick={e => shareTractor(e, t)}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    </button>
+                    {t.tractor_brokers?.filter(tb => tb.brokers?.phone).map(tb => (
+                      <a key={tb.brokers.id} className="btn btn-sm btn-wa" title={'WA: ' + tb.brokers.name}
+                        href={'https://wa.me/' + (tb.brokers.whatsapp||tb.brokers.phone).replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi ' + tb.brokers.name + ', tractor: ' + t.make + ' ' + t.model + ' — ' + window.location.origin + '/market/' + t.share_token)}
+                        target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                        {WA_ICON}
+                      </a>
+                    ))}
+                    {t.tractor_brokers?.filter(tb => tb.brokers?.phone).map(tb => (
+                      <a key={tb.brokers.id + '_c'} className="btn btn-sm btn-call" title={'Call: ' + tb.brokers.name}
+                        href={'tel:' + tb.brokers.phone} onClick={e => e.stopPropagation()}>
+                        {CALL_ICON}
+                      </a>
+                    ))}
                     <button className="btn btn-sm btn-danger" onClick={e => handleDelete(e, t.id)}>✕</button>
                   </div>
                 </td>
@@ -298,21 +332,7 @@ export default function TractorsPage() {
     catch (err) { alert(err.message); }
   };
 
-  // 1. Enquiry call — calls fixed number
-  const enquiryCall = (e) => {
-    e.stopPropagation();
-    window.open('tel:+917518767671', '_self');
-  };
-
-  // 2. Enquiry on WhatsApp — sends stock link to fixed number
-  const enquiryWA = (e, t) => {
-    e.stopPropagation();
-    const url = `${window.location.origin}/market/${t.share_token}`;
-    const msg = `Hi, I am interested in buying this tractor.\n\n🚜 *${t.make} ${t.model}* (${t.year})\n📍 ${t.location_text}\n💰 ${PRICE_FMT(t.expected_price)}\n\n${url}`;
-    window.open('https://wa.me/917518767671?text=' + encodeURIComponent(msg), '_blank');
-  };
-
-  // 3. Share tractor — native share sheet or clipboard fallback
+  // Share tractor — native share sheet or clipboard fallback
   const shareTractor = (e, t) => {
     e.stopPropagation();
     const url = `${window.location.origin}/market/${t.share_token}`;
@@ -445,8 +465,6 @@ export default function TractorsPage() {
           <CardView
             tractors={filtered}
             navigate={navigate}
-            enquiryCall={enquiryCall}
-            enquiryWA={enquiryWA}
             shareTractor={shareTractor}
             handleDelete={handleDelete}
           />
@@ -454,8 +472,6 @@ export default function TractorsPage() {
           <ListView
             tractors={filtered}
             navigate={navigate}
-            enquiryCall={enquiryCall}
-            enquiryWA={enquiryWA}
             shareTractor={shareTractor}
             handleDelete={handleDelete}
           />
