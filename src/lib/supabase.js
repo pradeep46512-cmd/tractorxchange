@@ -204,3 +204,27 @@ export async function markTractorSoldToEnquiry(tractorId, enquiryId, saleDate) {
   if (error) throw error;
   return data;
 }
+
+// ── Broker purchase history ───────────────────────────────
+// Matches by broker_id OR phone number (buyer_phone / buyer_whatsapp)
+export async function getBrokerPurchaseHistory(brokerId, phone) {
+  const conditions = [`broker_id.eq.${brokerId}`];
+  if (phone) {
+    const clean = phone.replace(/[^0-9]/g, '');
+    if (clean) {
+      conditions.push(`buyer_phone.ilike.%${clean}%`);
+      conditions.push(`buyer_whatsapp.ilike.%${clean}%`);
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('enquiries')
+    .select(`
+      id, buyer_name, buyer_phone, offered_price, status, sold_at, created_at, notes,
+      tractors(id, make, model, year, expected_price, rc_number, serial_number, area_office, location_text)
+    `)
+    .or(conditions.join(','))
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
