@@ -12,18 +12,48 @@ const INITIAL = {
 const PRICE_FMT = (n) => n ? '\u20b9' + Number(n).toLocaleString('en-IN') : '\u2014';
 
 // ── Score how relevant a broker is for this tractor ──────
+// ── Helper: tokenise a string into words for notes matching ──
+function words(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]/g, ' ').split(/\s+/).filter(w => w.length > 2);
+}
+
+// ── Score how relevant a broker is for this tractor ──────
 function scoreBroker(broker, form) {
   let score = 0;
-  const make = form.make.toLowerCase();
-  const loc = form.location_text.toLowerCase();
-  const state = form.state.toLowerCase();
+  const make  = (form.make || '').toLowerCase().trim();
+  const model = (form.model || '').toLowerCase().trim();
+  const loc   = (form.location_text || '').toLowerCase().trim();
+  const state = (form.state || '').toLowerCase().trim();
+  const spec  = (broker.speciality || '').toLowerCase().trim();
+  const bLoc  = (broker.location || '').toLowerCase().trim();
+  const notes = (broker.notes || '').toLowerCase();
 
-  // Speciality matches make
-  if (make && broker.speciality?.toLowerCase().includes(make)) score += 3;
-  // Location matches tractor location or state
-  if (loc && broker.location?.toLowerCase().includes(loc)) score += 2;
-  if (state && broker.location?.toLowerCase().includes(state)) score += 1;
-  // Active bonus
+  // ── Speciality — only use if NOT "all" or blank ──────────
+  const specIsAll = !spec || spec === 'all' || spec === 'all brands';
+  if (!specIsAll && make) {
+    if (spec.includes(make))  score += 4; // exact make in speciality
+    if (spec.includes(model)) score += 2; // model also in speciality
+  }
+
+  // ── Location proximity ────────────────────────────────────
+  // Exact city/location match
+  if (loc && bLoc && (bLoc.includes(loc) || loc.includes(bLoc))) score += 3;
+  // Same area office / state
+  if (state && bLoc && bLoc.includes(state)) score += 2;
+
+  // ── Notes text matching ───────────────────────────────────
+  // Check if broker's notes mention the make, model, or location
+  if (notes) {
+    const noteWords = words(notes);
+    if (make  && noteWords.some(w => w.includes(make)))  score += 2;
+    if (model && noteWords.some(w => w.includes(model))) score += 2;
+    if (loc   && noteWords.some(w => w.includes(loc)))   score += 3; // notes mention location — high signal
+  }
+
+  // Notes mention area office/state
+  if (notes && state && words(notes).some(w => w.includes(state))) score += 2;
+
+  // ── Active bonus ──────────────────────────────────────────
   if (broker.is_active) score += 1;
 
   return score;
@@ -33,35 +63,68 @@ function scoreBroker(broker, form) {
 function scoreEnquiry(eq, form) {
   if (eq.status === 'Sold' || eq.tractor_id) return 0; // already linked
   let score = 0;
-  let checks = 0;
-  const make = form.make.toLowerCase();
-  const model = form.model.toLowerCase();
+  let maxScore = 0;
 
+  const make  = (form.make  || '').toLowerCase().trim();
+  const model = (form.model || '').toLowerCase().trim();
+  const year  = String(form.year || '');
+  const hp    = parseInt(form.engine_hp) || 0;
+  const price = parseInt(String(form.expected_price || '').replace(/,/g, '')) || 0;
+  const loc   = (form.location_text || '').toLowerCase().trim();
+  const state = (form.state || '').toLowerCase().trim();
+
+  const eqNotes = words((eq.notes || '') + ' ' + (eq.req_notes || ''));
+  const bLoc    = (eq.buyer_location || '').toLowerCase().trim();
+
+  // ── Make match — highest weight ───────────────────────────
   if (eq.req_make) {
-    checks++;
-    if (make && eq.req_make.toLowerCase() === make) score++;
-  }
-  if (eq.req_model) {
-    checks++;
-    if (model && eq.req_model.toLowerCase().includes(model)) score++;
-  }
-  if (eq.req_year) {
-    checks++;
-    if (form.year && String(eq.req_year) === String(form.year)) score++;
-  }
-  if (eq.req_hp) {
-    checks++;
-    if (form.engine_hp && parseInt(form.engine_hp) >= parseInt(eq.req_hp)) score++;
-  }
-  if (eq.req_price_max) {
-    checks++;
-    const price = parseInt(String(form.expected_price).replace(/,/g, ''));
-    if (price && price <= parseInt(eq.req_price_max)) score++;
+    maxScore += 4;
+    if (make && eq.req_make.toLowerCase() === make) score += 4;
+    else if (make && eq.req_make.toLowerCase().includes(make)) score += 2;
   }
 
-  // If no requirements set but enquiry is open — show as possible match
-  if (checks === 0) return 0.1;
-  return score / checks;
+  // ── Model match ───────────────────────────────────────────
+  if (eq.req_model) {
+    maxScore += 3;
+    if (model && eq.req_model.toLowerCase().includes(model)) score += 3;
+    else if (model && model.includes(eq.req_model.toLowerCase())) score += 1;
+  }
+
+  // ── Year match ────────────────────────────────────────────
+  if (eq.req_year) {
+    maxScore += 2;
+    if (year && String(eq.req_year) === year) score += 2;
+  }
+
+  // ── HP match ──────────────────────────────────────────────
+  if (eq.req_hp) {
+    maxScore += 2;
+    if (hp && hp >= parseInt(eq.req_hp)) score += 2;
+  }
+
+  // ── Price match ───────────────────────────────────────────
+  if (eq.req_price_max) {
+    maxScore += 2;
+    const maxP = parseInt(eq.req_price_max) || 0;
+    if (price && price <= maxP) score += 2;
+    else if (price && price <= maxP * 1.1) score += 1; // within 10% tolerance
+  }
+
+  // ── Notes text matching — make/model mentioned in buyer notes ──
+  if (eqNotes.length > 0) {
+    if (make  && eqNotes.some(w => w.includes(make)))  { score += 2; maxScore += 2; }
+    if (model && eqNotes.some(w => w.includes(model))) { score += 1; maxScore += 1; }
+  }
+
+  // ── Location proximity ────────────────────────────────────
+  if (bLoc) {
+    if (loc   && (bLoc.includes(loc)   || loc.includes(bLoc)))   { score += 1; maxScore += 1; }
+    if (state && (bLoc.includes(state) || state.includes(bLoc))) { score += 1; maxScore += 1; }
+  }
+
+  // If no requirements set but enquiry is open — very low possible match
+  if (maxScore === 0) return 0.05;
+  return score / maxScore;
 }
 
 export default function TractorModal({ onClose, onSaved }) {
@@ -96,7 +159,7 @@ export default function TractorModal({ onClose, onSaved }) {
       .map(b => ({ ...b, _score: scoreBroker(b, form) }))
       .sort((a, b) => b._score - a._score)
       .slice(0, 10);
-  }, [brokers, form.make, form.location_text, form.state]);
+  }, [brokers, form.make, form.model, form.location_text, form.state]);
 
   // ── Matched enquiries — top 10 by relevance ──────────────
   const matchedEnquiries = useMemo(() => {
@@ -105,7 +168,7 @@ export default function TractorModal({ onClose, onSaved }) {
       .filter(eq => eq._score > 0)
       .sort((a, b) => b._score - a._score)
       .slice(0, 10);
-  }, [enquiries, form.make, form.model, form.year, form.engine_hp, form.expected_price]);
+  }, [enquiries, form.make, form.model, form.year, form.engine_hp, form.expected_price, form.location_text, form.state]);
 
   const scoreLabel = (s) => {
     if (s >= 0.8) return { text: 'Strong match', color: 'var(--green-dark)', bg: 'var(--green-light)' };
