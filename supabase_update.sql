@@ -46,3 +46,12 @@ alter table enquiries enable row level security;
 drop policy if exists "Auth full access enquiries" on enquiries;
 create policy "Auth full access enquiries"
   on enquiries for all using (auth.role() = 'authenticated');
+
+-- ── Enquiry requirement columns (run if enquiries table already exists) ──
+alter table enquiries add column if not exists req_make text;
+alter table enquiries add column if not exists req_model text;
+alter table enquiries add column if not exists req_year text;
+alter table enquiries add column if not exists req_hp int;
+alter table enquiries add column if not exists req_price_max bigint;
+alter table enquiries add column if not exists req_condition text;
+alter table enquiries add column if not exists req_notes text;
