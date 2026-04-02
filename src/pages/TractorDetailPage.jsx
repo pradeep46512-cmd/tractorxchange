@@ -391,12 +391,14 @@ export default function TractorDetailPage() {
                 {docs.map(doc => (
                   <div key={doc.id} className="doc-row">
                     <div className="doc-icon">{doc.file_type || 'FILE'}</div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:13, fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.name}</div>
+                    <div style={{ flex:1, minWidth:0, overflow:'hidden' }}>
+                      <div style={{ fontSize:13, fontWeight:500, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'100%' }}>
+                        {doc.name.length > 28 ? doc.name.slice(0, 25) + '…' : doc.name}
+                      </div>
                       <div className="text-muted text-sm">{doc.file_size ? Math.round(doc.file_size/1024) + ' KB' : ''}</div>
                     </div>
-                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="btn btn-sm">View</a>
-                    <button className="btn btn-sm btn-danger btn-icon" onClick={() => deleteDoc(doc.id)}>✕</button>
+                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="btn btn-sm" style={{ flexShrink:0 }}>View</a>
+                    <button className="btn btn-sm btn-danger btn-icon" style={{ flexShrink:0 }} onClick={() => deleteDoc(doc.id)}>✕</button>
                   </div>
                 ))}
               </div>
