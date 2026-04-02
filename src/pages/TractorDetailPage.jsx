@@ -252,146 +252,126 @@ export default function TractorDetailPage() {
         <div className="detail-layout">
           {/* LEFT COLUMN — Photos + Docs */}
           <div>
-            {/* ── Amazon-style photo viewer ── */}
-            <div style={{ marginBottom: 16 }}>
+            {/* ── Photo viewer — same as marketplace ── */}
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid var(--border)', overflow:'hidden', marginBottom:16 }}>
+
               {photos.length === 0 ? (
+                /* No photos — upload prompt */
                 <div onClick={() => photoRef.current?.click()} style={{
-                  width:'100%', height:200, border:'2px dashed var(--border-md)',
-                  borderRadius:'var(--radius-lg)', display:'flex', flexDirection:'column',
-                  alignItems:'center', justifyContent:'center', cursor:'pointer',
-                  color:'var(--gray-400)', gap:8, background:'var(--gray-50)'
+                  height:180, display:'flex', flexDirection:'column', alignItems:'center',
+                  justifyContent:'center', gap:8, cursor:'pointer', color:'var(--gray-400)',
+                  background:'var(--gray-50)', border:'2px dashed var(--border-md)',
+                  borderRadius:12,
                 }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                   <span style={{ fontSize:13, fontWeight:500 }}>Add photos</span>
                   <span style={{ fontSize:11 }}>Up to 5 photos</span>
                 </div>
               ) : (
-                <div style={{ display:'flex', gap:8 }}>
+                <div style={{ display:'flex', gap:0 }}>
 
-                  {/* ── Thumbnail column — left side ── */}
-                  <div style={{ display:'flex', flexDirection:'column', gap:6, flexShrink:0 }}>
-                    {photos.map((ph, i) => (
-                      <div
-                        key={ph.id}
-                        onClick={() => setGalleryIndex(i)}
-                        style={{
-                          width: 64, height: 64, borderRadius: 8, overflow:'hidden',
-                          cursor:'pointer', flexShrink:0,
-                          border: galleryIndex === i
-                            ? '2px solid var(--green)'
-                            : '2px solid var(--border)',
-                          background:'var(--gray-100)',
-                          transition:'border-color 0.15s',
-                        }}
-                      >
-                        <img src={ph.photo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                      </div>
-                    ))}
-                    {/* Add photo thumb */}
-                    {photos.length < 5 && (
-                      <div
-                        onClick={() => photoRef.current?.click()}
-                        style={{
-                          width:64, height:64, borderRadius:8, border:'2px dashed var(--border-md)',
-                          display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-                          cursor:'pointer', color:'var(--gray-400)', gap:2,
-                          background:'var(--gray-50)', fontSize:11,
-                        }}
-                        title="Add photo"
-                      >
-                        <span style={{ fontSize:20, lineHeight:1 }}>+</span>
-                        <span style={{ fontSize:9 }}>{photos.length}/5</span>
+                  {/* Thumbnail column */}
+                  {photos.length > 1 && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:4,
+                      padding:'10px 6px 10px 10px', borderRight:'1px solid var(--border)',
+                      background:'var(--gray-50)', flexShrink:0 }}>
+                      {photos.map((ph, i) => (
+                        <div key={ph.id} onClick={() => setGalleryIndex(i)}
+                          style={{ width:58, height:58, borderRadius:8, overflow:'hidden',
+                            cursor:'pointer', flexShrink:0,
+                            border: (galleryIndex ?? 0) === i ? '2px solid var(--green)' : '2px solid transparent',
+                            background:'var(--gray-100)' }}>
+                          <img src={ph.photo_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        </div>
+                      ))}
+                      {/* Add photo button */}
+                      {photos.length < 5 && (
+                        <div onClick={() => photoRef.current?.click()}
+                          style={{ width:58, height:58, borderRadius:8, border:'2px dashed var(--border-md)',
+                            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                            cursor:'pointer', color:'var(--gray-400)', background:'var(--gray-50)', gap:1 }}>
+                          <span style={{ fontSize:18, lineHeight:1 }}>+</span>
+                          <span style={{ fontSize:9 }}>{photos.length}/5</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Main image */}
+                  <div style={{ flex:1, minWidth:0, display:'flex', alignItems:'center',
+                    justifyContent:'center', background:'#fff', cursor:'zoom-in',
+                    minHeight:220, maxHeight:320, padding:8, position:'relative' }}
+                    onClick={() => setGalleryOpen(true)}>
+                    <img
+                      src={photos[galleryIndex ?? 0]?.photo_url}
+                      alt={tractor.make + ' ' + tractor.model}
+                      style={{ maxWidth:'100%', maxHeight:290, width:'auto', height:'auto',
+                        objectFit:'contain', display:'block', borderRadius:6 }}
+                    />
+                    {/* Counter */}
+                    {photos.length > 1 && (
+                      <div style={{ position:'absolute', top:8, right:8,
+                        background:'rgba(0,0,0,0.4)', color:'#fff',
+                        fontSize:10, padding:'2px 8px', borderRadius:12 }}>
+                        {(galleryIndex ?? 0) + 1} / {photos.length}
                       </div>
                     )}
-                  </div>
-
-                  {/* ── Main image — right side ── */}
-                  <div style={{ flex:1, minWidth:0, position:'relative' }}>
-                    <div
-                      onClick={() => setGalleryOpen(true)}
-                      style={{
-                        width:'100%',
-                        height: 320,
-                        borderRadius: 'var(--radius-lg)', overflow:'hidden',
-                        background:'var(--gray-50)', border:'1px solid var(--border)',
-                        cursor:'zoom-in',
-                        display:'flex', alignItems:'center', justifyContent:'center',
-                        position:'relative',
-                      }}
-                    >
-                      <img
-                        src={photos[galleryIndex ?? 0]?.photo_url}
-                        alt={tractor.make + ' ' + tractor.model}
-                        style={{
-                          maxWidth:'100%',
-                          maxHeight:'100%',
-                          width:'auto',
-                          height:'auto',
-                          objectFit:'contain',
-                          display:'block',
-                        }}
-                      />
-                      {/* Zoom hint */}
-                      <div style={{
-                        position:'absolute', bottom:8, right:8,
-                        background:'rgba(0,0,0,0.45)', color:'#fff',
-                        fontSize:10, padding:'3px 8px', borderRadius:20,
-                        display:'flex', alignItems:'center', gap:4,
-                      }}>
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                        Tap to zoom
-                      </div>
-                      {/* Delete button on main image */}
-                      <button
-                        onClick={e => { e.stopPropagation(); deletePhoto(photos[galleryIndex ?? 0]); setGalleryIndex(null); }}
-                        style={{
-                          position:'absolute', top:8, right:8,
-                          background:'rgba(226,75,74,0.8)', color:'#fff',
-                          border:'none', borderRadius:'50%',
-                          width:26, height:26, cursor:'pointer', fontSize:14,
-                          display:'flex', alignItems:'center', justifyContent:'center',
-                        }}
-                        title="Delete this photo"
-                      >✕</button>
-                      {/* Cover badge */}
-                      {photos[galleryIndex ?? 0]?.is_cover && (
-                        <span style={{
-                          position:'absolute', top:8, left:8,
-                          fontSize:10, fontWeight:700, background:'var(--green)',
-                          color:'#fff', padding:'2px 8px', borderRadius:10,
-                        }}>Cover</span>
-                      )}
-                      {/* Set as cover button */}
-                      {!photos[galleryIndex ?? 0]?.is_cover && (
-                        <button
-                          onClick={e => { e.stopPropagation(); setCover(photos[galleryIndex ?? 0]); }}
-                          style={{
-                            position:'absolute', top:8, left:8,
-                            background:'rgba(0,0,0,0.45)', color:'#fff', border:'none',
-                            borderRadius:12, padding:'2px 10px', fontSize:10,
-                            cursor:'pointer', fontWeight:600,
-                          }}
-                        >Set Cover</button>
-                      )}
+                    {/* Zoom hint */}
+                    <div style={{ position:'absolute', bottom:8, right:8,
+                      background:'rgba(0,0,0,0.4)', color:'#fff',
+                      fontSize:10, padding:'2px 8px', borderRadius:12,
+                      display:'flex', alignItems:'center', gap:3 }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                      Tap to zoom
                     </div>
-
-                    {/* Photo counter */}
-                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:6 }}>
-                      <span style={{ fontSize:11, color:'var(--gray-400)' }}>
-                        {(galleryIndex ?? 0) + 1} of {photos.length}
-                      </span>
-                      <div style={{ display:'flex', gap:6 }}>
-                        <button className="btn btn-sm"
-                          disabled={(galleryIndex ?? 0) === 0}
-                          onClick={() => setGalleryIndex(i => Math.max((i ?? 0) - 1, 0))}
-                          style={{ padding:'4px 10px' }}>‹</button>
-                        <button className="btn btn-sm"
-                          disabled={(galleryIndex ?? 0) >= photos.length - 1}
-                          onClick={() => setGalleryIndex(i => Math.min((i ?? 0) + 1, photos.length - 1))}
-                          style={{ padding:'4px 10px' }}>›</button>
-                      </div>
-                    </div>
+                    {/* Cover badge */}
+                    {photos[galleryIndex ?? 0]?.is_cover && (
+                      <span style={{ position:'absolute', top:8, left:8,
+                        fontSize:10, fontWeight:700, background:'var(--green)',
+                        color:'#fff', padding:'2px 8px', borderRadius:10 }}>Cover</span>
+                    )}
+                    {/* Set as cover */}
+                    {!photos[galleryIndex ?? 0]?.is_cover && (
+                      <button onClick={e => { e.stopPropagation(); setCover(photos[galleryIndex ?? 0]); }}
+                        style={{ position:'absolute', top:8, left:8,
+                          background:'rgba(0,0,0,0.45)', color:'#fff', border:'none',
+                          borderRadius:12, padding:'2px 10px', fontSize:10, cursor:'pointer', fontWeight:600 }}>
+                        Set Cover
+                      </button>
+                    )}
+                    {/* Delete */}
+                    <button onClick={e => { e.stopPropagation(); deletePhoto(photos[galleryIndex ?? 0]); setGalleryIndex(0); }}
+                      style={{ position:'absolute', top:8, right: photos.length > 1 ? 48 : 8,
+                        background:'rgba(226,75,74,0.8)', color:'#fff', border:'none',
+                        borderRadius:'50%', width:26, height:26, cursor:'pointer', fontSize:14,
+                        display:'flex', alignItems:'center', justifyContent:'center' }}
+                      title="Delete photo">✕</button>
                   </div>
+                </div>
+              )}
+
+              {/* Nav + add row */}
+              {photos.length > 0 && (
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                  padding:'8px 12px', borderTop:'1px solid var(--border)', background:'var(--gray-50)' }}>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button className="btn btn-sm"
+                      disabled={(galleryIndex ?? 0) === 0}
+                      onClick={() => setGalleryIndex(i => Math.max((i ?? 0) - 1, 0))}
+                      style={{ padding:'4px 12px', opacity:(galleryIndex ?? 0) === 0 ? 0.4 : 1 }}>‹</button>
+                    <button className="btn btn-sm"
+                      disabled={(galleryIndex ?? 0) >= photos.length - 1}
+                      onClick={() => setGalleryIndex(i => Math.min((i ?? 0) + 1, photos.length - 1))}
+                      style={{ padding:'4px 12px', opacity:(galleryIndex ?? 0) >= photos.length - 1 ? 0.4 : 1 }}>›</button>
+                  </div>
+                  <span style={{ fontSize:11, color:'var(--gray-400)' }}>
+                    {(galleryIndex ?? 0) + 1} of {photos.length}
+                  </span>
+                  {photos.length < 5 && (
+                    <button className="btn btn-sm" onClick={() => photoRef.current?.click()} disabled={uploading}>
+                      {uploading ? 'Uploading…' : '+ Add Photo'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
