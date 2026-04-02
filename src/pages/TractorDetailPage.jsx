@@ -186,13 +186,15 @@ export default function TractorDetailPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div className="flex flex-center gap-12">
+      <div className="topbar" style={{ flexWrap:'wrap', gap:10 }}>
+        <div className="flex flex-center gap-12" style={{ minWidth:0 }}>
           <button className="btn btn-sm" onClick={() => navigate('/')}>← Back</button>
-          <h2>{tractor.make} {tractor.model}</h2>
-          <span className={`status-badge status-${tractor.status}`}>{tractor.status}</span>
+          <div style={{ minWidth:0 }}>
+            <h2 style={{ fontSize:15, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:'40vw' }}>{tractor.make} {tractor.model}</h2>
+            <span className={`status-badge status-${tractor.status}`} style={{ position:'static', display:'inline-block', marginTop:2 }}>{tractor.status}</span>
+          </div>
         </div>
-        <div className="topbar-actions">
+        <div className="topbar-actions" style={{ flexWrap:'wrap' }}>
           {tractor.status === 'Sold' ? (
             <span className="status-badge status-Sold" style={{ fontSize:13, padding:'6px 14px' }}>
               Sold {tractor.sold_at ? '— ' + new Date(tractor.sold_at).toLocaleDateString('en-IN') : ''}
@@ -212,26 +214,34 @@ export default function TractorDetailPage() {
         </div>
       </div>
 
-      <div className="content">
+      <div className="content" style={{ padding: '16px 20px' }}>
         <div className="detail-layout">
-          {/* LEFT COLUMN */}
+          {/* LEFT COLUMN — Photos + Docs */}
           <div>
-            {/* Main photo */}
-            <div className="detail-photo-main" style={{ marginBottom: 12 }}>
-              {mainPhoto ? <img src={mainPhoto} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius: 12 }} /> : <span>🚜</span>}
+            {/* Main photo — responsive, fits screen */}
+            <div className="detail-photo-main">
+              {mainPhoto
+                ? <img src={mainPhoto} alt={tractor.make + ' ' + tractor.model} />
+                : <span>🚜</span>}
             </div>
 
-            {/* Photo grid */}
+            {/* Thumbnail strip */}
             <div className="photo-grid">
               {photos.map(ph => (
-                <div key={ph.id} className="photo-thumb">
-                  <img src={ph.photo_url} alt="" onClick={() => setCover(ph)} title="Set as cover" />
+                <div key={ph.id} className="photo-thumb" onClick={() => setCover(ph)} title="Set as cover photo">
+                  <img src={ph.photo_url} alt="" />
                   {ph.is_cover && <span className="cover-badge">Cover</span>}
-                  <button className="photo-delete" onClick={() => deletePhoto(ph)}>✕</button>
+                  <button className="photo-delete" onClick={e => { e.stopPropagation(); deletePhoto(ph); }}>✕</button>
                 </div>
               ))}
-              <div className="photo-thumb" style={{ cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--gray-100)', fontSize:14, color:'var(--gray-400)', flexDirection:'column', gap:2 }} onClick={() => photos.length < 5 && photoRef.current?.click()}>
-                <span style={{fontSize:20}}>+</span><span style={{fontSize:10}}>{photos.length}/5</span>
+              <div
+                className="photo-thumb"
+                style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'var(--gray-100)', flexDirection:'column', gap:2, color:'var(--gray-400)', opacity: photos.length >= 5 ? 0.4 : 1 }}
+                onClick={() => photos.length < 5 && photoRef.current?.click()}
+                title={photos.length >= 5 ? 'Max 5 photos' : 'Add photo'}
+              >
+                <span style={{ fontSize:18 }}>+</span>
+                <span style={{ fontSize:9 }}>{photos.length}/5</span>
               </div>
             </div>
             <input ref={photoRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handlePhotoUpload} />
@@ -264,10 +274,16 @@ export default function TractorDetailPage() {
 
           {/* RIGHT COLUMN */}
           <div>
-            {/* Price & stats */}
-            <div className="stat-cards" style={{ marginBottom: 16 }}>
-              <div className="stat-card"><div className="stat-label">Expected Price</div><div className="stat-value price-value">{PRICE_FMT(tractor.expected_price)}</div></div>
+            {/* Key stats — price, year, hours, HP */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:14 }}>
+              <div className="stat-card" style={{ gridColumn:'1/-1' }}>
+                <div className="stat-label">Expected Price</div>
+                <div className="stat-value price-value">{PRICE_FMT(tractor.expected_price)}</div>
+              </div>
+              <div className="stat-card"><div className="stat-label">Year</div><div className="stat-value">{tractor.year || '—'}</div></div>
               <div className="stat-card"><div className="stat-label">Condition</div><div className="stat-value">{tractor.condition || '—'}</div></div>
+              {tractor.hours_used && <div className="stat-card"><div className="stat-label">Hours Used</div><div className="stat-value" style={{ fontSize:14 }}>{tractor.hours_used}</div></div>}
+              {tractor.engine_hp && <div className="stat-card"><div className="stat-label">Engine</div><div className="stat-value" style={{ fontSize:14 }}>{tractor.engine_hp} HP</div></div>}
             </div>
 
             {/* Info */}
