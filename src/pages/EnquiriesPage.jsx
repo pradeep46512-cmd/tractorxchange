@@ -55,6 +55,7 @@ export default function EnquiriesPage() {
   const [soldModal, setSoldModal] = useState(null);
   const [saleDate, setSaleDate] = useState('');
   const [matchPanel, setMatchPanel] = useState(null); // enquiry id to show matches for
+  const [viewMode, setViewMode] = useState('card'); // 'card' | 'list'
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -191,6 +192,23 @@ export default function EnquiriesPage() {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export
           </button>
+          {/* View toggle */}
+          <div style={{ display:'flex', border:'1px solid var(--border-md)', borderRadius:'var(--radius-md)', overflow:'hidden' }}>
+            <button className="btn" title="Card view"
+              style={{ borderRadius:0, border:'none', borderRight:'1px solid var(--border-md)', padding:'6px 10px',
+                background: viewMode==='card' ? 'var(--green-light)' : '#fff',
+                color: viewMode==='card' ? 'var(--green-dark)' : 'var(--gray-600)' }}
+              onClick={() => setViewMode('card')}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+            <button className="btn" title="List view"
+              style={{ borderRadius:0, border:'none', padding:'6px 10px',
+                background: viewMode==='list' ? 'var(--green-light)' : '#fff',
+                color: viewMode==='list' ? 'var(--green-dark)' : 'var(--gray-600)' }}
+              onClick={() => setViewMode('list')}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
           <button className="btn btn-primary" onClick={openAdd}>+ Add Enquiry</button>
         </div>
       </div>
@@ -203,10 +221,99 @@ export default function EnquiriesPage() {
           ))}
         </div>
 
-        {loading ? <div className="empty-state"><div className="spinner" style={{ margin:'0 auto 12px' }} /><p>Loading…</p></div> : (
+        {loading ? <div className="empty-state"><div className="spinner" style={{ margin:'0 auto 12px' }} /><p>Loading…</p></div> : filtered.length === 0 ? (
+          <div className="empty-state"><p>No enquiries found.</p></div>
+        ) : viewMode === 'list' ? (
+          /* ── LIST VIEW ── */
+          <div className="card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Buyer</th>
+                  <th>Requirement / Stock</th>
+                  <th>Offered Price</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(eq => {
+                  const linkedTractor = tractors.find(t => t.id === eq.tractor_id);
+                  const matches = matchedTractors[eq.id] || [];
+                  return (
+                    <tr key={eq.id}>
+                      <td>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{eq.buyer_name}</div>
+                        {eq.buyer_phone && (
+                          <div className="flex gap-8" style={{ marginTop:4 }}>
+                            <a href={'tel:'+eq.buyer_phone} className="btn btn-sm btn-call" style={{ padding:'2px 7px', fontSize:11 }}>
+                              {WA} Call
+                            </a>
+                            <a href={'https://wa.me/'+(eq.buyer_whatsapp||eq.buyer_phone).replace(/[^0-9]/g,'')} target="_blank" rel="noreferrer" className="btn btn-sm btn-wa" style={{ padding:'2px 7px', fontSize:11 }}>
+                              {WA} WA
+                            </a>
+                          </div>
+                        )}
+                        {eq.buyer_location && <div className="text-muted text-sm" style={{ marginTop:2 }}>📍 {eq.buyer_location}</div>}
+                      </td>
+                      <td>
+                        {linkedTractor ? (
+                          <div>
+                            <div style={{ fontWeight:600, fontSize:12, color:'var(--green-dark)' }}>{linkedTractor.make} {linkedTractor.model} ({linkedTractor.year})</div>
+                            <div style={{ fontSize:11, color:'var(--gray-400)' }}>{PRICE_FMT(linkedTractor.expected_price)}</div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div style={{ fontSize:12, display:'flex', flexWrap:'wrap', gap:4 }}>
+                              {eq.req_make && <span className="tag tag-blue" style={{ fontSize:10 }}>{eq.req_make}</span>}
+                              {eq.req_model && <span className="tag tag-blue" style={{ fontSize:10 }}>{eq.req_model}</span>}
+                              {eq.req_year && <span className="tag tag-gray" style={{ fontSize:10 }}>{eq.req_year}</span>}
+                              {eq.req_price_max && <span className="tag tag-green" style={{ fontSize:10 }}>Max {PRICE_FMT(eq.req_price_max)}</span>}
+                              {!eq.req_make && !eq.req_model && <span className="text-muted text-sm">No req.</span>}
+                            </div>
+                            {matches.length > 0 && (
+                              <div style={{ fontSize:11, color:'var(--green-dark)', fontWeight:600, marginTop:3 }}>
+                                {matches.length} stock match{matches.length>1?'es':''}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td><span style={{ fontWeight:600, color:'var(--green)', fontSize:13 }}>{PRICE_FMT(eq.offered_price)}</span></td>
+                      <td><span className={`tag ${eq.source==='broker'?'tag-blue':eq.source==='dealer'?'tag-amber':'tag-gray'}`} style={{ fontSize:10 }}>{eq.source}</span></td>
+                      <td>
+                        <select className="form-input form-select" style={{ fontSize:12, padding:'3px 24px 3px 8px', width:120 }}
+                          value={eq.status} onChange={e => handleStatusChange(eq.id, e.target.value)}>
+                          {['New','Negotiating','Sold','Lost'].map(s => <option key={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td className="text-muted text-sm">{new Date(eq.created_at).toLocaleDateString('en-IN')}</td>
+                      <td>
+                        <div className="flex gap-8">
+                          {!linkedTractor && matches.length > 0 && (
+                            <button className="btn btn-sm btn-primary" style={{ fontSize:11, padding:'4px 8px' }}
+                              onClick={() => { setViewMode('card'); setMatchPanel(eq.id); }}>
+                              {matches.length} Match{matches.length>1?'es':''}
+                            </button>
+                          )}
+                          {linkedTractor && eq.status !== 'Sold' && linkedTractor.status !== 'Sold' && (
+                            <button className="btn btn-sm btn-primary" style={{ fontSize:11 }} onClick={() => handleMarkSold(eq)}>✓ Sold</button>
+                          )}
+                          <button className="btn btn-sm" onClick={() => openEdit(eq)}>Edit</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDelete(eq.id)}>✕</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* ── CARD VIEW ── */
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {filtered.length === 0 && <div className="empty-state"><p>No enquiries found.</p></div>}
-
             {filtered.map(eq => {
               const linkedTractor = tractors.find(t => t.id === eq.tractor_id);
               const matches = matchedTractors[eq.id] || [];
@@ -334,6 +441,7 @@ export default function EnquiriesPage() {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
       </div>
