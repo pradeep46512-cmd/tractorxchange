@@ -130,7 +130,7 @@ export default function TractorModal({ onClose, onSaved }) {
                 <select className="form-input form-select" value={form.location_text} onChange={e => set('location_text', e.target.value)}>
                   <option value="">Select dealer location...</option>
                   {dealersInState.map(d => (
-                    <option key={d.id} value={d.city}>{d.name} - {d.city}</option>
+                    <option key={d.id} value={d.city}>{d.city} - {d.name}</option>
                   ))}
                 </select>
               ) : (
