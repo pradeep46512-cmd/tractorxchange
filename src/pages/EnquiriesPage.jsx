@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getEnquiries, createEnquiry, updateEnquiry, deleteEnquiry,
-  markTractorSoldToEnquiry, getTractors, getBrokers, getDealers
+  markTractorSoldToEnquiry, getTractors, getBrokers, getDealers, updateTractor
 } from '../lib/supabase';
 import { exportEnquiriesToExcel } from '../lib/exportToExcel';
 
@@ -112,8 +112,22 @@ export default function EnquiriesPage() {
         req_hp: form.req_hp ? parseInt(form.req_hp) : null,
         req_year: form.req_year || null,
       };
-      if (editing) await updateEnquiry(editing, payload);
-      else await createEnquiry(payload);
+      if (editing) {
+        const oldEq = enquiries.find(e => e.id === editing);
+        await updateEnquiry(editing, payload);
+        // Sync tractor if status changed
+        const tractorId = payload.tractor_id || oldEq?.tractor_id;
+        if (tractorId && oldEq?.status !== payload.status) {
+          const tractor = tractors.find(t => t.id === tractorId);
+          if (payload.status === 'Sold') {
+            await updateTractor(tractorId, { status: 'Sold' });
+          } else if ((payload.status === 'New' || payload.status === 'Negotiating' || payload.status === 'Lost') && tractor?.status === 'Sold') {
+            await updateTractor(tractorId, { status: 'Available', sold_at: null });
+          }
+        }
+      } else {
+        await createEnquiry(payload);
+      }
       load(); setShowModal(false);
     } catch (e) { alert(e.message); }
     finally { setSaving(false); }
@@ -142,7 +156,32 @@ export default function EnquiriesPage() {
   };
 
   const handleStatusChange = async (id, status) => {
-    try { await updateEnquiry(id, { status }); load(); } catch (e) { alert(e.message); }
+    try {
+      // Find the enquiry to get its linked tractor
+      const eq = enquiries.find(e => e.id === id);
+      await updateEnquiry(id, { status });
+
+      // Sync tractor status when enquiry status changes
+      if (eq?.tractor_id) {
+        if (status === 'Sold') {
+          // Already handled by markTractorSoldToEnquiry — but if changed manually, sync
+          await updateTractor(eq.tractor_id, { status: 'Sold' });
+        } else if (status === 'New' || status === 'Negotiating') {
+          // Buyer backed out — reopen the tractor stock
+          const tractor = tractors.find(t => t.id === eq.tractor_id);
+          if (tractor?.status === 'Sold') {
+            await updateTractor(eq.tractor_id, { status: 'Available', sold_at: null });
+          }
+        } else if (status === 'Lost') {
+          // Enquiry lost — make tractor available again if it was sold
+          const tractor = tractors.find(t => t.id === eq.tractor_id);
+          if (tractor?.status === 'Sold') {
+            await updateTractor(eq.tractor_id, { status: 'Available', sold_at: null });
+          }
+        }
+      }
+      load();
+    } catch (e) { alert(e.message); }
   };
 
   // Compute matches for each enquiry
