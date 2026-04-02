@@ -55,7 +55,7 @@ export default function DealersPage() {
           {loading ? <div style={{ padding:40, textAlign:'center' }}><div className="spinner" style={{ margin:'0 auto' }} /></div> : (
             <table className="data-table">
               <thead>
-                <tr><th>Dealership</th><th>Contact</th><th>Phone</th><th>City / State</th><th>Brands</th><th>Status</th><th></th></tr>
+                <tr><th>Dealership</th><th>Contact</th><th>Phone</th><th>City / Area Office</th><th>Brands</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
                 {dealers.length === 0 && <tr><td colSpan="7" style={{ textAlign:'center', color:'var(--gray-400)', padding:32 }}>No dealers yet.</td></tr>}
@@ -114,9 +114,9 @@ export default function DealersPage() {
               </div>
               <div className="form-row">
                 <div className="form-group"><label className="form-label">City</label><input className="form-input" value={form.city} onChange={e => set('city',e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">State</label>
+                <div className="form-group"><label className="form-label">Area Office</label>
                 <select className="form-input form-select" value={form.state} onChange={e => set('state',e.target.value)}>
-                  <option value="">Select state...</option>
+                  <option value="">Select area office...</option>
                   {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>

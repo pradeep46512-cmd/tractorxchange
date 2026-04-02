@@ -111,9 +111,9 @@ export default function TractorModal({ onClose, onSaved }) {
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">State</label>
+              <label className="form-label">Area Office</label>
               <select className="form-input form-select" value={form.state} onChange={e => handleStateChange(e.target.value)}>
-                <option value="">Select state...</option>
+                <option value="">Select area office...</option>
                 {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -122,7 +122,7 @@ export default function TractorModal({ onClose, onSaved }) {
                 Dealer Location
                 {form.state && dealersInState.length === 0 && (
                   <span style={{ color: 'var(--gray-400)', fontWeight: 400, marginLeft: 6, textTransform: 'none' }}>
-                    (no dealers in {form.state})
+                    (no dealers in {form.state} area)
                   </span>
                 )}
               </label>
@@ -136,7 +136,7 @@ export default function TractorModal({ onClose, onSaved }) {
               ) : (
                 <input
                   className="form-input"
-                  placeholder={form.state ? 'Type location manually' : 'Select state first'}
+                  placeholder={form.state ? 'Type location manually' : 'Select area office first'}
                   value={form.location_text}
                   onChange={e => set('location_text', e.target.value)}
                 />
