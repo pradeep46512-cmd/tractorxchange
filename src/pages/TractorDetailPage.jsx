@@ -248,9 +248,9 @@ export default function TractorDetailPage() {
         </div>
       </div>
 
-      <div className="content" style={{ padding: '16px 20px' }}>
-        <div className="detail-layout">
-          {/* LEFT COLUMN — Photos + Docs */}
+      <div className="content" style={{ padding: '16px 20px', maxWidth: 720, margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {/* SINGLE COLUMN */}
           <div>
             {/* ── Photo viewer — same as marketplace ── */}
             <div style={{ background:'#fff', borderRadius:12, border:'1px solid var(--border)', overflow:'hidden', marginBottom:16 }}>
@@ -382,7 +382,7 @@ export default function TractorDetailPage() {
               <div className="card-header">
                 <h3>Documents</h3>
                 <button className="btn btn-sm" onClick={() => docRef.current?.click()} disabled={uploading}>
-                  {uploading ? '…' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Upload'}
+                  {uploading ? '…' : '+ Upload'}
                 </button>
                 <input ref={docRef} type="file" style={{ display:'none' }} onChange={handleDocUpload} />
               </div>
@@ -403,7 +403,7 @@ export default function TractorDetailPage() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* Details — below photos */}
           <div>
             {/* Key stats — price, year, hours, HP */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:14 }}>
