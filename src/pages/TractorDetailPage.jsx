@@ -202,6 +202,7 @@ export default function TractorDetailPage() {
                   ['RC Number', tractor.rc_number],
                   ['Serial / Chassis No.', tractor.serial_number],
                   ['Date of Exchange', tractor.exchange_date ? new Date(tractor.exchange_date).toLocaleDateString('en-IN') : null],
+                  ['Area Office', tractor.area_office],
                   ['Location', tractor.location_text],
                   ['Sold On', tractor.sold_at ? new Date(tractor.sold_at).toLocaleDateString('en-IN') : null],
                 ].filter(([,v]) => v).map(([label, val]) => (

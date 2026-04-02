@@ -39,8 +39,10 @@ export default function TractorModal({ onClose, onSaved }) {
     if (!form.make || !form.model) return alert('Make and Model are required.');
     setSaving(true);
     try {
+      const { state, ...rest } = form;
       await createTractor({
-        ...form,
+        ...rest,
+        area_office: state,
         year: form.year ? parseInt(form.year) : null,
         engine_hp: form.engine_hp ? parseInt(form.engine_hp) : null,
         expected_price: form.expected_price ? parseInt(String(form.expected_price).replace(/,/g, '')) : null,
@@ -106,7 +108,7 @@ export default function TractorModal({ onClose, onSaved }) {
             </div>
             <div className="form-group">
               <label className="form-label">Date of Exchange</label>
-              <input className="form-input" type="date" value={form.exchange_date} onChange={e => set('exchange_date', e.target.value)} />
+              <input className="form-input" type="date" value={form.exchange_date} max={new Date().toISOString().slice(0,10)} onChange={e => set('exchange_date', e.target.value)} />
             </div>
           </div>
           <div className="form-row">

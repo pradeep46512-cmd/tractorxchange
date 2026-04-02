@@ -1,14 +1,16 @@
 -- ============================================================
--- TractorXchange — UPDATE SQL (run this in Supabase SQL Editor)
+-- TractorXchange — RUN THIS in Supabase SQL Editor
+-- Adds all new columns needed for the latest features
 -- ============================================================
 
--- Add new columns to tractors table
+-- New columns for tractors table
 alter table tractors add column if not exists rc_number text;
 alter table tractors add column if not exists serial_number text;
 alter table tractors add column if not exists exchange_date date;
 alter table tractors add column if not exists sold_at timestamptz;
+alter table tractors add column if not exists area_office text;
 
--- Enquiries table (create if not exists)
+-- Enquiries table
 create table if not exists enquiries (
   id              uuid primary key default gen_random_uuid(),
   tractor_id      uuid references tractors(id) on delete set null,
@@ -30,7 +32,6 @@ create table if not exists enquiries (
 create index if not exists idx_enquiries_tractor on enquiries(tractor_id);
 create index if not exists idx_enquiries_status on enquiries(status);
 
--- Trigger for updated_at
 create or replace function update_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end;
