@@ -50,7 +50,8 @@ export default function EnquiriesPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(INIT_FORM);
   const [saving, setSaving] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('Open'); // Open = New + Negotiating
+  const [showClosed, setShowClosed] = useState(false);
   const [search, setSearch] = useState('');
   const [soldModal, setSoldModal] = useState(null);
   const [saleDate, setSaleDate] = useState('');
@@ -159,19 +160,28 @@ export default function EnquiriesPage() {
     return result;
   }, [enquiries, tractors]);
 
-  const filtered = enquiries.filter(eq => {
-    const matchStatus = filterStatus === 'All' || eq.status === filterStatus;
+  const applyEnqFilters = (list) => {
     const q = search.toLowerCase();
-    const eqStr = [
-      eq.buyer_name, eq.buyer_phone, eq.buyer_whatsapp, eq.buyer_location,
-      eq.source, eq.status, eq.notes, eq.offered_price,
-      eq.req_make, eq.req_model, eq.req_year, eq.req_condition, eq.req_notes,
-      eq.tractors?.make, eq.tractors?.model, eq.tractors?.year,
-      eq.tractors?.location_text, eq.tractors?.rc_number,
-    ].filter(Boolean).join(' ').toLowerCase();
-    const matchSearch = !q || eqStr.includes(q);
-    return matchStatus && matchSearch;
+    return list.filter(eq => {
+      const eqStr = [
+        eq.buyer_name, eq.buyer_phone, eq.buyer_whatsapp, eq.buyer_location,
+        eq.source, eq.status, eq.notes, eq.offered_price,
+        eq.req_make, eq.req_model, eq.req_year, eq.req_condition, eq.req_notes,
+        eq.tractors?.make, eq.tractors?.model, eq.tractors?.year,
+        eq.tractors?.location_text, eq.tractors?.rc_number,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return !q || eqStr.includes(q);
+    });
+  };
+
+  const openEnquiries = enquiries.filter(eq => eq.status === 'New' || eq.status === 'Negotiating');
+  const closedEnquiries = enquiries.filter(eq => eq.status === 'Sold' || eq.status === 'Lost');
+
+  const filtered = applyEnqFilters(openEnquiries).filter(eq => {
+    const matchStatus = filterStatus === 'Open' || filterStatus === 'All' || eq.status === filterStatus;
+    return matchStatus;
   });
+  const filteredClosed = applyEnqFilters(closedEnquiries);
 
   const counts = { All: enquiries.length, New: 0, Negotiating: 0, Sold: 0, Lost: 0 };
   enquiries.forEach(eq => { if (counts[eq.status] !== undefined) counts[eq.status]++; });
@@ -185,8 +195,10 @@ export default function EnquiriesPage() {
         <h2>Enquiries</h2>
         <div className="topbar-actions">
           <input className="search-input" placeholder="Search buyer or tractor…" value={search} onChange={e => setSearch(e.target.value)} />
-          <select className="form-input form-select" style={{ width: 150 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            {['All','New','Negotiating','Sold','Lost'].map(s => <option key={s} value={s}>{s} ({counts[s]})</option>)}
+          <select className="form-input form-select" style={{ width: 160 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+            <option value="Open">All Open ({counts.New + counts.Negotiating})</option>
+            <option value="New">New ({counts.New})</option>
+            <option value="Negotiating">Negotiating ({counts.Negotiating})</option>
           </select>
           <button className="btn" onClick={() => exportEnquiriesToExcel(enquiries)}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -215,11 +227,41 @@ export default function EnquiriesPage() {
 
       <div className="content">
         {/* Summary */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:10, marginBottom:20 }}>
-          {[{l:'Total',v:counts.All,c:'var(--gray-900)'},{l:'New',v:counts.New,c:'var(--blue)'},{l:'Negotiating',v:counts.Negotiating,c:'var(--amber)'},{l:'Sold',v:counts.Sold,c:'var(--green)'},{l:'Lost',v:counts.Lost,c:'var(--gray-400)'}].map(s => (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))', gap:10, marginBottom:16 }}>
+          {[
+            {l:'Total Active',v:counts.New+counts.Negotiating,c:'var(--gray-900)'},
+            {l:'New',v:counts.New,c:'var(--blue)'},
+            {l:'Negotiating',v:counts.Negotiating,c:'var(--amber)'},
+          ].map(s => (
             <div key={s.l} className="stat-card"><div className="stat-label">{s.l}</div><div className="stat-value" style={{ color:s.c }}>{s.v}</div></div>
           ))}
+          {/* Closed summary + toggle */}
+          <div className="stat-card" style={{ cursor:'pointer', border: showClosed ? '1px solid var(--border-md)' : '1px solid var(--border)' }}
+            onClick={() => setShowClosed(s => !s)}>
+            <div className="stat-label">Closed</div>
+            <div className="stat-value" style={{ color:'var(--gray-400)', fontSize:16 }}>{counts.Sold + counts.Lost}</div>
+            <div style={{ fontSize:10, color: showClosed ? 'var(--green-dark)' : 'var(--gray-400)', marginTop:4, fontWeight:600 }}>
+              {showClosed ? 'Hide ▲' : 'Show ▼'}
+            </div>
+          </div>
         </div>
+
+        {/* Show closed button — also visible in toolbar area */}
+        {!loading && closedEnquiries.length > 0 && (
+          <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:10 }}>
+            <button
+              className="btn btn-sm"
+              style={{ fontSize:12, background: showClosed ? 'var(--red-light)' : '#fff',
+                color: showClosed ? 'var(--red-text)' : 'var(--gray-600)',
+                borderColor: showClosed ? 'var(--red)' : 'var(--border-md)' }}
+              onClick={() => setShowClosed(s => !s)}
+            >
+              {showClosed
+                ? `Hide Closed (${closedEnquiries.length})`
+                : `Show Closed — ${counts.Sold} Sold · ${counts.Lost} Lost`}
+            </button>
+          </div>
+        )}
 
         {loading ? <div className="empty-state"><div className="spinner" style={{ margin:'0 auto 12px' }} /><p>Loading…</p></div> : filtered.length === 0 ? (
           <div className="empty-state"><p>No enquiries found.</p></div>
@@ -444,6 +486,57 @@ export default function EnquiriesPage() {
           </div>
         )}
       </div>
+
+      {/* ── Closed Enquiries section ── */}
+      {showClosed && !loading && filteredClosed.length > 0 && (
+        <div style={{ marginTop:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+            <div style={{ height:1, flex:1, background:'var(--border)' }} />
+            <span style={{ fontSize:12, fontWeight:700, color:'var(--gray-600)',
+              background:'var(--gray-100)', padding:'3px 12px', borderRadius:20, whiteSpace:'nowrap' }}>
+              Closed Enquiries — {filteredClosed.length}
+            </span>
+            <div style={{ height:1, flex:1, background:'var(--border)' }} />
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8, opacity:0.75 }}>
+            {filteredClosed.map(eq => {
+              const linkedTractor = tractors.find(t => t.id === eq.tractor_id);
+              return (
+                <div key={eq.id} className="card" style={{ overflow:'hidden' }}>
+                  <div style={{ padding:'12px 16px', display:'flex', gap:16, flexWrap:'wrap', alignItems:'center' }}>
+                    <div style={{ flex:'1', minWidth:160 }}>
+                      <div style={{ fontWeight:700, fontSize:13 }}>{eq.buyer_name}</div>
+                      {eq.buyer_phone && <div style={{ fontSize:11, color:'var(--gray-400)', marginTop:2 }}>{eq.buyer_phone}</div>}
+                      {eq.buyer_location && <div style={{ fontSize:11, color:'var(--gray-400)' }}>📍 {eq.buyer_location}</div>}
+                    </div>
+                    <div style={{ flex:'2', minWidth:180 }}>
+                      {linkedTractor ? (
+                        <div>
+                          <div style={{ fontWeight:600, fontSize:13 }}>{linkedTractor.make} {linkedTractor.model} ({linkedTractor.year})</div>
+                          <div style={{ fontSize:11, color:'var(--gray-400)' }}>{PRICE_FMT(linkedTractor.expected_price)} · {linkedTractor.location_text}</div>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize:12, color:'var(--gray-400)' }}>
+                          {[eq.req_make, eq.req_model, eq.req_year].filter(Boolean).join(' ') || 'No tractor linked'}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      {eq.offered_price && <span style={{ fontWeight:700, color:'var(--green)', fontSize:13 }}>{PRICE_FMT(eq.offered_price)}</span>}
+                      <span className={`tag ${eq.status === 'Sold' ? 'tag-green' : 'tag-gray'}`}>{eq.status}</span>
+                      {eq.sold_at && <span style={{ fontSize:11, color:'var(--gray-400)' }}>{new Date(eq.sold_at).toLocaleDateString('en-IN')}</span>}
+                    </div>
+                    <div className="flex gap-8">
+                      <button className="btn btn-sm" onClick={() => openEdit(eq)}>Edit</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(eq.id)}>✕</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       {showModal && (

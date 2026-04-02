@@ -270,7 +270,8 @@ export default function TractorsPage() {
   const [tractors, setTractors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('Active'); // Active = Available + Pending
+  const [showSold, setShowSold] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState('card'); // 'card' | 'list'
   const [showFilters, setShowFilters] = useState(false);
@@ -292,22 +293,22 @@ export default function TractorsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Unique values for filter dropdowns
-  const makes = [...new Set(tractors.map(t => t.make).filter(Boolean))].sort();
-  const models = [...new Set(tractors.filter(t => !filterMake || t.make === filterMake).map(t => t.model).filter(Boolean))].sort();
-  const years = [...new Set(tractors.map(t => t.year).filter(Boolean))].sort((a,b) => b - a);
+  // Unique values for filter dropdowns (from active stock only)
+  const activeTractors = tractors.filter(t => t.status !== 'Sold');
+  const soldTractors = tractors.filter(t => t.status === 'Sold');
+  const makes = [...new Set(activeTractors.map(t => t.make).filter(Boolean))].sort();
+  const models = [...new Set(activeTractors.filter(t => !filterMake || t.make === filterMake).map(t => t.model).filter(Boolean))].sort();
+  const years = [...new Set(activeTractors.map(t => t.year).filter(Boolean))].sort((a,b) => b - a);
 
-  const filtered = tractors.filter(t => {
+  const applyFilters = (list) => list.filter(t => {
     const q = search.toLowerCase();
     const searchStr = [
       t.make, t.model, t.year, t.hours_used, t.engine_hp,
       t.location_text, t.area_office, t.rc_number, t.serial_number,
-      t.condition, t.status, t.description,
-      t.expected_price, t.exchange_date,
+      t.condition, t.status, t.description, t.expected_price, t.exchange_date,
       ...(t.tractor_brokers?.map(tb => tb.brokers?.name) || []),
     ].filter(Boolean).join(' ').toLowerCase();
     const matchSearch = !q || searchStr.includes(q);
-    const matchStatus = filterStatus === 'All' || t.status === filterStatus;
     const matchMake = !filterMake || t.make === filterMake;
     const matchModel = !filterModel || t.model === filterModel;
     const matchYear = !filterYear || String(t.year) === filterYear;
@@ -315,8 +316,15 @@ export default function TractorsPage() {
     const matchHours = !filterHours || (t.hours_used && parseInt(t.hours_used) <= parseInt(filterHours));
     const matchPriceMin = !filterPriceMin || (t.expected_price && t.expected_price >= parseInt(filterPriceMin.replace(/,/g,'')));
     const matchPriceMax = !filterPriceMax || (t.expected_price && t.expected_price <= parseInt(filterPriceMax.replace(/,/g,'')));
-    return matchSearch && matchStatus && matchMake && matchModel && matchYear && matchHP && matchHours && matchPriceMin && matchPriceMax;
+    return matchSearch && matchMake && matchModel && matchYear && matchHP && matchHours && matchPriceMin && matchPriceMax;
   });
+
+  // Active stock filtered by status dropdown
+  const filtered = applyFilters(activeTractors).filter(t => {
+    const matchStatus = filterStatus === 'Active' || filterStatus === 'All' || t.status === filterStatus;
+    return matchStatus;
+  });
+  const filteredSold = applyFilters(soldTractors);
 
   const activeFilters = [filterMake, filterModel, filterYear, filterHP, filterHours, filterPriceMin, filterPriceMax].filter(Boolean).length;
 
@@ -354,11 +362,10 @@ export default function TractorsPage() {
         <h2>Exchange Tractors</h2>
         <div className="topbar-actions">
           <input className="search-input" placeholder="Search by model or location…" value={search} onChange={e => setSearch(e.target.value)} />
-          <select className="form-input form-select" style={{ width: 130 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option>All</option>
-            <option>Available</option>
-            <option>Pending</option>
-            <option>Sold</option>
+          <select className="form-input form-select" style={{ width: 140 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+            <option value="Active">All Active</option>
+            <option value="Available">Available</option>
+            <option value="Pending">Pending</option>
           </select>
 
           {/* Filter toggle */}
@@ -449,11 +456,22 @@ export default function TractorsPage() {
       )}
 
       <div className="content">
-        {/* Count */}
-        {!loading && filtered.length > 0 && (
-          <div style={{ fontSize: 12, color: 'var(--gray-400)', marginBottom: 12 }}>
-            {filtered.length} tractor{filtered.length !== 1 ? 's' : ''}
-            {filterStatus !== 'All' ? ` · ${filterStatus}` : ''}
+        {/* Count + sold toggle */}
+        {!loading && (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <div style={{ fontSize:12, color:'var(--gray-400)' }}>
+              {filtered.length} active stock
+              {soldTractors.length > 0 && ` · ${soldTractors.length} sold`}
+            </div>
+            {soldTractors.length > 0 && (
+              <button
+                className="btn btn-sm"
+                style={{ fontSize:12, background: showSold ? 'var(--red-light)' : '#fff', color: showSold ? 'var(--red-text)' : 'var(--gray-600)', borderColor: showSold ? 'var(--red)' : 'var(--border-md)' }}
+                onClick={() => setShowSold(s => !s)}
+              >
+                {showSold ? 'Hide Sold Units' : `Show ${soldTractors.length} Sold Unit${soldTractors.length > 1 ? 's' : ''}`}
+              </button>
+            )}
           </div>
         )}
 
@@ -477,6 +495,25 @@ export default function TractorsPage() {
           />
         )}
       </div>
+
+      {/* ── Sold units section ── */}
+      {showSold && !loading && filteredSold.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+            <div style={{ height:1, flex:1, background:'var(--border)' }} />
+            <span style={{ fontSize:12, fontWeight:700, color:'var(--red-text)', background:'var(--red-light)',
+              padding:'3px 12px', borderRadius:20, whiteSpace:'nowrap' }}>
+              Sold Units — {filteredSold.length}
+            </span>
+            <div style={{ height:1, flex:1, background:'var(--border)' }} />
+          </div>
+          {viewMode === 'card' ? (
+            <CardView tractors={filteredSold} navigate={navigate} shareTractor={shareTractor} handleDelete={handleDelete} />
+          ) : (
+            <ListView tractors={filteredSold} navigate={navigate} shareTractor={shareTractor} handleDelete={handleDelete} />
+          )}
+        </div>
+      )}
 
       {showModal && <TractorModal onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); load(); }} />}
     </>
