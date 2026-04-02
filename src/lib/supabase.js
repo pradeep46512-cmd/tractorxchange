@@ -3,7 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase env vars. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel.');
+}
+
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder'
+);
 
 // ── Tractors ──────────────────────────────────────────────
 export async function getTractors() {
@@ -185,11 +192,12 @@ export async function deleteEnquiry(id) {
   if (error) throw error;
 }
 
-export async function markTractorSoldToEnquiry(tractorId, enquiryId) {
-  await updateTractor(tractorId, { status: 'Sold' });
+export async function markTractorSoldToEnquiry(tractorId, enquiryId, saleDate) {
+  const soldAt = saleDate ? new Date(saleDate).toISOString() : new Date().toISOString();
+  await updateTractor(tractorId, { status: 'Sold', sold_at: soldAt });
   const { data, error } = await supabase
     .from('enquiries')
-    .update({ status: 'Sold', sold_at: new Date().toISOString() })
+    .update({ status: 'Sold', sold_at: soldAt })
     .eq('id', enquiryId)
     .select()
     .single();

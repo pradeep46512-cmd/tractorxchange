@@ -27,6 +27,8 @@ export default function EnquiriesPage() {
   const [saving, setSaving] = useState(false);
   const [filterStatus, setFilterStatus] = useState('All');
   const [search, setSearch] = useState('');
+  const [soldModal, setSoldModal] = useState(null); // { eq } when open
+  const [saleDate, setSaleDate] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,12 +100,17 @@ export default function EnquiriesPage() {
     finally { setSaving(false); }
   };
 
-  const handleMarkSold = async (eq) => {
+  const handleMarkSold = (eq) => {
     if (!eq.tractor_id) return alert('No tractor linked to this enquiry.');
-    const tractor = tractors.find(t => t.id === eq.tractor_id);
-    if (!window.confirm(`Mark "${tractor?.make} ${tractor?.model}" as SOLD to ${eq.buyer_name}?`)) return;
+    setSaleDate(new Date().toISOString().slice(0, 10));
+    setSoldModal(eq);
+  };
+
+  const confirmMarkSold = async () => {
+    if (!soldModal) return;
     try {
-      await markTractorSoldToEnquiry(eq.tractor_id, eq.id);
+      await markTractorSoldToEnquiry(soldModal.tractor_id, soldModal.id, saleDate);
+      setSoldModal(null);
       load();
     } catch (e) { alert(e.message); }
   };
@@ -369,6 +376,45 @@ export default function EnquiriesPage() {
           </div>
         </div>
       )}
+      {/* Mark Sold Modal */}
+      {soldModal && (() => {
+        const tractor = tractors.find(t => t.id === soldModal.tractor_id);
+        return (
+          <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setSoldModal(null)}>
+            <div className="modal" style={{ maxWidth: 420 }}>
+              <div className="modal-header">
+                <h3>Mark as Sold</h3>
+                <button className="btn btn-sm btn-icon" onClick={() => setSoldModal(null)}>X</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ background: 'var(--green-light)', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: 'var(--green-dark)' }}>
+                  <strong>{tractor?.make} {tractor?.model} ({tractor?.year})</strong>
+                  <div style={{ marginTop: 4 }}>Selling to: <strong>{soldModal.buyer_name}</strong></div>
+                  {soldModal.offered_price && <div>Offered price: <strong>Rs.{Number(soldModal.offered_price).toLocaleString('en-IN')}</strong></div>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Date of Sale *</label>
+                  <input
+                    className="form-input"
+                    type="date"
+                    value={saleDate}
+                    onChange={e => setSaleDate(e.target.value)}
+                  />
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 8 }}>
+                  This will mark the tractor status as Sold and close this enquiry.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button className="btn" onClick={() => setSoldModal(null)}>Cancel</button>
+                <button className="btn btn-primary" onClick={confirmMarkSold} disabled={!saleDate}>
+                  Confirm Sale
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }

@@ -1,10 +1,14 @@
 -- ============================================================
--- TractorXchange — UPDATE SQL
--- Run this in Supabase SQL Editor to add new features
--- (Only needed if you already ran the original schema)
+-- TractorXchange — UPDATE SQL (run this in Supabase SQL Editor)
 -- ============================================================
 
--- Enquiries table
+-- Add new columns to tractors table
+alter table tractors add column if not exists rc_number text;
+alter table tractors add column if not exists serial_number text;
+alter table tractors add column if not exists exchange_date date;
+alter table tractors add column if not exists sold_at timestamptz;
+
+-- Enquiries table (create if not exists)
 create table if not exists enquiries (
   id              uuid primary key default gen_random_uuid(),
   tractor_id      uuid references tractors(id) on delete set null,
@@ -26,10 +30,18 @@ create table if not exists enquiries (
 create index if not exists idx_enquiries_tractor on enquiries(tractor_id);
 create index if not exists idx_enquiries_status on enquiries(status);
 
+-- Trigger for updated_at
+create or replace function update_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end;
+$$;
+
+drop trigger if exists enquiries_updated_at on enquiries;
 create trigger enquiries_updated_at before update on enquiries
   for each row execute function update_updated_at();
 
 alter table enquiries enable row level security;
 
+drop policy if exists "Auth full access enquiries" on enquiries;
 create policy "Auth full access enquiries"
   on enquiries for all using (auth.role() = 'authenticated');

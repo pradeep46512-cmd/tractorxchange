@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDealers, createDealer, updateDealer, deleteDealer } from '../lib/supabase';
+import { INDIAN_STATES } from '../lib/indianStates';
 import BulkImportModal from '../components/BulkImportModal.jsx';
 
 const INIT = { name:'', contact_person:'', phone:'', whatsapp:'', email:'', city:'', state:'', brands:'', is_active:true, notes:'' };
@@ -113,7 +114,12 @@ export default function DealersPage() {
               </div>
               <div className="form-row">
                 <div className="form-group"><label className="form-label">City</label><input className="form-input" value={form.city} onChange={e => set('city',e.target.value)} /></div>
-                <div className="form-group"><label className="form-label">State</label><input className="form-input" value={form.state} onChange={e => set('state',e.target.value)} /></div>
+                <div className="form-group"><label className="form-label">State</label>
+                <select className="form-input form-select" value={form.state} onChange={e => set('state',e.target.value)}>
+                  <option value="">Select state...</option>
+                  {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
               </div>
               <div className="form-group"><label className="form-label">Notes</label><textarea className="form-input form-textarea" value={form.notes} onChange={e => set('notes',e.target.value)} /></div>
               <div className="form-group">

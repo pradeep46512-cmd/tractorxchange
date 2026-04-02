@@ -197,10 +197,15 @@ export default function TractorDetailPage() {
                 {[
                   ['Year', tractor.year],
                   ['Hours Used', tractor.hours_used],
-                  ['Engine', tractor.engine_hp ? tractor.engine_hp + ' HP' : '—'],
+                  ['Engine', tractor.engine_hp ? tractor.engine_hp + ' HP' : null],
+                  ['Condition', tractor.condition],
+                  ['RC Number', tractor.rc_number],
+                  ['Serial / Chassis No.', tractor.serial_number],
+                  ['Date of Exchange', tractor.exchange_date ? new Date(tractor.exchange_date).toLocaleDateString('en-IN') : null],
                   ['Location', tractor.location_text],
-                ].map(([label, val]) => (
-                  <div key={label} className="info-row"><span className="label">{label}</span><span className="font-bold">{val || '—'}</span></div>
+                  ['Sold On', tractor.sold_at ? new Date(tractor.sold_at).toLocaleDateString('en-IN') : null],
+                ].filter(([,v]) => v).map(([label, val]) => (
+                  <div key={label} className="info-row"><span className="label">{label}</span><span className="font-bold">{val}</span></div>
                 ))}
                 {tractor.description && <p style={{ marginTop: 10, fontSize: 13, color: 'var(--gray-600)' }}>{tractor.description}</p>}
               </div>
