@@ -442,7 +442,6 @@ export default function EnquiriesPage() {
               );
             })}
           </div>
-          </div>
         )}
       </div>
 
