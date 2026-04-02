@@ -161,9 +161,14 @@ export default function EnquiriesPage() {
   const filtered = enquiries.filter(eq => {
     const matchStatus = filterStatus === 'All' || eq.status === filterStatus;
     const q = search.toLowerCase();
-    const matchSearch = !q || eq.buyer_name?.toLowerCase().includes(q) ||
-      eq.req_make?.toLowerCase().includes(q) || eq.req_model?.toLowerCase().includes(q) ||
-      eq.tractors?.make?.toLowerCase().includes(q) || eq.tractors?.model?.toLowerCase().includes(q);
+    const eqStr = [
+      eq.buyer_name, eq.buyer_phone, eq.buyer_whatsapp, eq.buyer_location,
+      eq.source, eq.status, eq.notes, eq.offered_price,
+      eq.req_make, eq.req_model, eq.req_year, eq.req_condition, eq.req_notes,
+      eq.tractors?.make, eq.tractors?.model, eq.tractors?.year,
+      eq.tractors?.location_text, eq.tractors?.rc_number,
+    ].filter(Boolean).join(' ').toLowerCase();
+    const matchSearch = !q || eqStr.includes(q);
     return matchStatus && matchSearch;
   });
 

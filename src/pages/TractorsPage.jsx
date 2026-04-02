@@ -60,7 +60,7 @@ function PhotoLightbox({ photo, name, onClose }) {
 }
 
 // ── Card View ──────────────────────────────────────────────
-function CardView({ tractors, navigate, shareWA, copyLink, handleDelete }) {
+function CardView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, handleDelete }) {
   const [lightbox, setLightbox] = useState(null);
 
   return (
@@ -92,20 +92,20 @@ function CardView({ tractors, navigate, shareWA, copyLink, handleDelete }) {
                   {t.description}
                 </div>
               )}
-              <div className="tcard-actions">
-                <button className="btn btn-sm btn-wa" onClick={e => shareWA(e, t)}>{WA_ICON} WhatsApp</button>
-                <button className="btn btn-sm" onClick={e => copyLink(e, t)}>{LINK_ICON} Link</button>
-                <button className="btn btn-sm btn-danger" style={{ marginLeft: 'auto' }} onClick={e => handleDelete(e, t.id)}>✕</button>
-              </div>
-              {t.tractor_brokers?.length > 0 && t.tractor_brokers[0]?.brokers?.phone && (
-                <div style={{ marginTop: 6 }}>
-                  <a className="btn btn-sm btn-call" style={{ width: '100%', justifyContent: 'center' }}
-                    href={'tel:' + t.tractor_brokers[0].brokers.phone}
-                    onClick={e => e.stopPropagation()}>
-                    {CALL_ICON} Call: {t.tractor_brokers[0].brokers.name}
-                  </a>
+              <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8 }}>
+                <div style={{ display:'flex', gap:6 }}>
+                  <button className="btn btn-sm btn-call" style={{ flex:1, justifyContent:'center' }} onClick={e => enquiryCall(e)}>
+                    {CALL_ICON} Enquiry Call
+                  </button>
+                  <button className="btn btn-sm btn-danger btn-icon" style={{ flexShrink:0 }} onClick={e => handleDelete(e, t.id)}>✕</button>
                 </div>
-              )}
+                <button className="btn btn-sm btn-wa" style={{ width:'100%', justifyContent:'center' }} onClick={e => enquiryWA(e, t)}>
+                  {WA_ICON} Enquiry on WhatsApp
+                </button>
+                <button className="btn btn-sm" style={{ width:'100%', justifyContent:'center' }} onClick={e => shareTractor(e, t)}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share This Tractor
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -123,7 +123,7 @@ function CardView({ tractors, navigate, shareWA, copyLink, handleDelete }) {
 }
 
 // ── List View ──────────────────────────────────────────────
-function ListView({ tractors, navigate, shareWA, copyLink, handleDelete }) {
+function ListView({ tractors, navigate, enquiryCall, enquiryWA, shareTractor, handleDelete }) {
   const [lightbox, setLightbox] = useState(null);
 
   return (
@@ -194,15 +194,9 @@ function ListView({ tractors, navigate, shareWA, copyLink, handleDelete }) {
                 {/* Actions */}
                 <td>
                   <div className="flex gap-8" style={{ flexWrap: 'nowrap' }}>
-                    <button className="btn btn-sm btn-wa" onClick={e => shareWA(e, t)}>{WA_ICON}</button>
-                    <button className="btn btn-sm" onClick={e => copyLink(e, t)}>{LINK_ICON}</button>
-                    {t.tractor_brokers?.length > 0 && t.tractor_brokers[0]?.brokers?.phone && (
-                      <a className="btn btn-sm btn-call"
-                        href={'tel:' + t.tractor_brokers[0].brokers.phone}
-                        onClick={e => e.stopPropagation()}>
-                        {CALL_ICON}
-                      </a>
-                    )}
+                    <button className="btn btn-sm btn-call" title="Enquiry Call" onClick={e => enquiryCall(e)}>{CALL_ICON}</button>
+                    <button className="btn btn-sm btn-wa" title="Enquiry on WhatsApp" onClick={e => enquiryWA(e, t)}>{WA_ICON}</button>
+                    <button className="btn btn-sm" title="Share Tractor" onClick={e => shareTractor(e, t)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
                     <button className="btn btn-sm btn-danger" onClick={e => handleDelete(e, t.id)}>✕</button>
                   </div>
                 </td>
@@ -271,7 +265,14 @@ export default function TractorsPage() {
 
   const filtered = tractors.filter(t => {
     const q = search.toLowerCase();
-    const matchSearch = !q || `${t.make} ${t.model} ${t.location_text} ${t.rc_number || ''}`.toLowerCase().includes(q);
+    const searchStr = [
+      t.make, t.model, t.year, t.hours_used, t.engine_hp,
+      t.location_text, t.area_office, t.rc_number, t.serial_number,
+      t.condition, t.status, t.description,
+      t.expected_price, t.exchange_date,
+      ...(t.tractor_brokers?.map(tb => tb.brokers?.name) || []),
+    ].filter(Boolean).join(' ').toLowerCase();
+    const matchSearch = !q || searchStr.includes(q);
     const matchStatus = filterStatus === 'All' || t.status === filterStatus;
     const matchMake = !filterMake || t.make === filterMake;
     const matchModel = !filterModel || t.model === filterModel;
@@ -297,17 +298,34 @@ export default function TractorsPage() {
     catch (err) { alert(err.message); }
   };
 
-  const shareWA = (e, t) => {
+  // 1. Enquiry call — calls fixed number
+  const enquiryCall = (e) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/market/${t.share_token}`;
-    const msg = `🚜 *${t.make} ${t.model}* (${t.year})\n📍 ${t.location_text}\n⏱ ${t.hours_used}\n💰 ${PRICE_FMT(t.expected_price)}\n\n🔗 ${url}`;
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    window.open('tel:+917518767671', '_self');
   };
 
-  const copyLink = (e, t) => {
+  // 2. Enquiry on WhatsApp — sends stock link to fixed number
+  const enquiryWA = (e, t) => {
     e.stopPropagation();
     const url = `${window.location.origin}/market/${t.share_token}`;
-    navigator.clipboard.writeText(url).then(() => alert('Link copied!'));
+    const msg = `Hi, I am interested in buying this tractor.\n\n🚜 *${t.make} ${t.model}* (${t.year})\n📍 ${t.location_text}\n💰 ${PRICE_FMT(t.expected_price)}\n\n${url}`;
+    window.open('https://wa.me/917518767671?text=' + encodeURIComponent(msg), '_blank');
+  };
+
+  // 3. Share tractor — native share sheet or clipboard fallback
+  const shareTractor = (e, t) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/market/${t.share_token}`;
+    const shareData = {
+      title: `${t.make} ${t.model} (${t.year})`,
+      text: `${t.make} ${t.model} (${t.year}) — ${PRICE_FMT(t.expected_price)} — 📍 ${t.location_text}`,
+      url,
+    };
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => alert('Link copied to clipboard!'));
+    }
   };
 
   return (
@@ -427,16 +445,18 @@ export default function TractorsPage() {
           <CardView
             tractors={filtered}
             navigate={navigate}
-            shareWA={shareWA}
-            copyLink={copyLink}
+            enquiryCall={enquiryCall}
+            enquiryWA={enquiryWA}
+            shareTractor={shareTractor}
             handleDelete={handleDelete}
           />
         ) : (
           <ListView
             tractors={filtered}
             navigate={navigate}
-            shareWA={shareWA}
-            copyLink={copyLink}
+            enquiryCall={enquiryCall}
+            enquiryWA={enquiryWA}
+            shareTractor={shareTractor}
             handleDelete={handleDelete}
           />
         )}

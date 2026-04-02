@@ -42,7 +42,8 @@ export default function DealersPage() {
 
   const filtered = dealers.filter(d => {
     const q = search.toLowerCase();
-    const matchSearch = !q || d.name?.toLowerCase().includes(q) || d.contact_person?.toLowerCase().includes(q) || d.phone?.includes(q) || d.city?.toLowerCase().includes(q);
+    const dStr = [d.name, d.contact_person, d.phone, d.whatsapp, d.email, d.city, d.state, d.brands, d.notes].filter(Boolean).join(' ').toLowerCase();
+    const matchSearch = !q || dStr.includes(q);
     const matchState = !filterState || d.state === filterState;
     const matchCity = !filterCity || d.city === filterCity;
     return matchSearch && matchState && matchCity;

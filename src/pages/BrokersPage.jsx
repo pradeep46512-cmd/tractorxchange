@@ -40,7 +40,8 @@ export default function BrokersPage() {
 
   const filtered = brokers.filter(b => {
     const q = search.toLowerCase();
-    const matchSearch = !q || b.name?.toLowerCase().includes(q) || b.phone?.includes(q) || b.speciality?.toLowerCase().includes(q) || b.location?.toLowerCase().includes(q);
+    const bStr = [b.name, b.phone, b.whatsapp, b.email, b.location, b.speciality, b.notes].filter(Boolean).join(' ').toLowerCase();
+    const matchSearch = !q || bStr.includes(q);
     const matchLoc = !filterLocation || b.location === filterLocation;
     const matchStatus = filterStatus === 'All' || (filterStatus === 'Active' ? b.is_active : !b.is_active);
     return matchSearch && matchLoc && matchStatus;
