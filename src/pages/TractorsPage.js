@@ -6,7 +6,7 @@ import { exportTractorsToExcel } from '../lib/exportToExcel';
 
 const PRICE_FMT = (n) => n ? '₹' + Number(n).toLocaleString('en-IN') : '—';
 
-export default function TractorsPage() {
+export default function TractorsPage({ role, userId }) {
   const [tractors, setTractors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -24,6 +24,7 @@ export default function TractorsPage() {
   useEffect(() => { load(); }, [load]);
 
   const filtered = tractors.filter(t => {
+    if (role === 'field_agent' && t.owner_id !== userId) return false;
     const q = search.toLowerCase();
     const matchSearch = !q || `${t.make} ${t.model} ${t.location_text}`.toLowerCase().includes(q);
     const matchStatus = filterStatus === 'All' || t.status === filterStatus;

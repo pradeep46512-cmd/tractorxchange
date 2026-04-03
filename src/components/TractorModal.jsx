@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createTractor, getBrokers, getDealers, getEnquiries } from '../lib/supabase';
+import { createTractor, getBrokers, getDealers, getEnquiries, supabase } from '../lib/supabase';
 import { INDIAN_STATES } from '../lib/indianStates';
 
 const INITIAL = {
@@ -180,6 +180,7 @@ export default function TractorModal({ onClose, onSaved }) {
     if (!form.make || !form.model) return alert('Make and Model are required.');
     setSaving(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const { state, ...rest } = form;
       await createTractor({
         ...rest,
@@ -188,6 +189,8 @@ export default function TractorModal({ onClose, onSaved }) {
         engine_hp: form.engine_hp ? parseInt(form.engine_hp) : null,
         expected_price: form.expected_price ? parseInt(String(form.expected_price).replace(/,/g, '')) : null,
         exchange_date: form.exchange_date || null,
+        owner_id: user?.id || null,
+        owner_email: user?.email || null,
       }, selectedBrokers);
       onSaved();
     } catch (e) { alert(e.message); }
