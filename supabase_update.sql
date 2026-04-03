@@ -55,3 +55,25 @@ alter table enquiries add column if not exists req_hp int;
 alter table enquiries add column if not exists req_price_max bigint;
 alter table enquiries add column if not exists req_condition text;
 alter table enquiries add column if not exists req_notes text;
+
+-- ── New price fields on enquiries ──────────────────────────
+alter table enquiries add column if not exists market_rate bigint;  -- buyer's stated market rate
+alter table enquiries add column if not exists sold_price bigint;   -- final sold price
+
+-- ── Role-based access ─────────────────────────────────────
+-- Add owner to tractors so field agents can filter their own
+alter table tractors add column if not exists owner_id uuid references auth.users(id);
+alter table tractors add column if not exists owner_email text;
+
+-- Index for fast lookup
+create index if not exists tractors_owner_id_idx on tractors(owner_id);
+
+-- RLS: Enable on tractors (run these if not already done)
+-- alter table tractors enable row level security;
+
+-- NOTE: We handle field agent filtering in the app layer (not RLS)
+-- so admins continue to see all tractors without policy conflicts.
+-- To assign a user as field_agent, update their metadata in Supabase Auth:
+--   In Supabase Dashboard → Authentication → Users → click user → Edit → Raw user metadata:
+--   { "app_role": "field_agent" }
+-- Admin users have no app_role set, or app_role: "admin"

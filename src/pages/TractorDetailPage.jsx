@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   getTractorById, getTractorDocuments, updateTractor,
   uploadDocument, uploadPhoto, supabase,
-  getBrokers, getDealers, createEnquiry, markTractorSoldToEnquiry
+  getBrokers, getDealers, createEnquiry, markTractorSoldToEnquiry, getEnquiries
 } from '../lib/supabase';
 
 const PRICE_FMT = (n) => n ? '₹' + Number(n).toLocaleString('en-IN') : '—';
@@ -30,6 +30,7 @@ export default function TractorDetailPage() {
   const [brokers, setBrokers] = useState([]);
   const [dealers, setDealers] = useState([]);
   const [markingSold, setMarkingSold] = useState(false);
+  const [tractorEnquiries, setTractorEnquiries] = useState([]);
   const [galleryIndex, setGalleryIndex] = useState(0); // index of selected thumbnail; gallery overlay opens on click
 
   // Keyboard nav — only active when gallery overlay is open
@@ -54,8 +55,9 @@ export default function TractorDetailPage() {
       setDocs(await getTractorDocuments(id));
       const { data: ph } = await supabase.from('tractor_photos').select('*').eq('tractor_id', id).order('created_at');
       setPhotos(ph || []);
-      const [br, dl] = await Promise.all([getBrokers(), getDealers()]);
+      const [br, dl, allEnq] = await Promise.all([getBrokers(), getDealers(), getEnquiries()]);
       setBrokers(br); setDealers(dl);
+      setTractorEnquiries(allEnq.filter(eq => eq.tractor_id === id));
     } catch (e) { alert(e.message); }
     finally { setLoading(false); }
   };
@@ -440,6 +442,48 @@ export default function TractorDetailPage() {
                 {tractor.description && <p style={{ marginTop: 10, fontSize: 13, color: 'var(--gray-600)' }}>{tractor.description}</p>}
               </div>
             </div>
+
+            {/* ── Enquiry Intel — market rates from linked enquiries ── */}
+            {tractorEnquiries.length > 0 && (
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid var(--border)', padding:16, marginBottom:14 }}>
+                <div style={{ fontSize:15, fontWeight:700, marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
+                  Enquiry Intel
+                  <span className="tag tag-blue">{tractorEnquiries.length} enquir{tractorEnquiries.length > 1 ? 'ies' : 'y'}</span>
+                </div>
+                {tractorEnquiries.map((eq, i) => (
+                  <div key={eq.id} style={{ padding:'10px 0', borderBottom: i < tractorEnquiries.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8 }}>
+                      <div style={{ minWidth:0 }}>
+                        <div style={{ fontWeight:600, fontSize:13 }}>{eq.buyer_name}</div>
+                        {eq.buyer_location && <div style={{ fontSize:11, color:'var(--gray-400)' }}>📍 {eq.buyer_location}</div>}
+                      </div>
+                      <span className={`tag ${eq.status==='Sold'?'tag-green':eq.status==='Negotiating'?'tag-amber':eq.status==='Lost'?'tag-gray':'tag-blue'}`} style={{ flexShrink:0 }}>{eq.status}</span>
+                    </div>
+                    <div style={{ display:'flex', gap:16, marginTop:6, flexWrap:'wrap' }}>
+                      {eq.offered_price && (
+                        <div>
+                          <div style={{ fontSize:10, fontWeight:700, color:'var(--gray-400)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Offered</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:'var(--green)' }}>₹{Number(eq.offered_price).toLocaleString('en-IN')}</div>
+                        </div>
+                      )}
+                      {eq.market_rate && (
+                        <div>
+                          <div style={{ fontSize:10, fontWeight:700, color:'var(--gray-400)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Market Rate</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:'var(--amber-text)' }}>₹{Number(eq.market_rate).toLocaleString('en-IN')}</div>
+                        </div>
+                      )}
+                      {eq.sold_price && (
+                        <div>
+                          <div style={{ fontSize:10, fontWeight:700, color:'var(--gray-400)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Sold Price</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:'var(--green-dark)' }}>₹{Number(eq.sold_price).toLocaleString('en-IN')}</div>
+                        </div>
+                      )}
+                    </div>
+                    {eq.notes && <div style={{ fontSize:11, color:'var(--gray-600)', marginTop:4 }}>{eq.notes}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Share — same 3 buttons as tractor card */}
             <div className="card" style={{ marginBottom: 16 }}>

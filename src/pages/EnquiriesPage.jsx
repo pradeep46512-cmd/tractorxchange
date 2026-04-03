@@ -37,7 +37,7 @@ const INIT_FORM = {
   // OR requirement details (for unlinked enquiries)
   req_make: '', req_model: '', req_year: '', req_hp: '', req_price_max: '',
   req_condition: '', req_notes: '',
-  offered_price: '', status: 'New', notes: ''
+  offered_price: '', market_rate: '', sold_price: '', status: 'New', notes: ''
 };
 
 export default function EnquiriesPage() {
@@ -94,7 +94,7 @@ export default function EnquiriesPage() {
       req_make: eq.req_make||'', req_model: eq.req_model||'', req_year: eq.req_year||'',
       req_hp: eq.req_hp||'', req_price_max: eq.req_price_max||'',
       req_condition: eq.req_condition||'', req_notes: eq.req_notes||'',
-      offered_price: eq.offered_price||'', status: eq.status||'New', notes: eq.notes||'' });
+      offered_price: eq.offered_price||'', market_rate: eq.market_rate||'', sold_price: eq.sold_price||'', status: eq.status||'New', notes: eq.notes||'' });
     setShowModal(true);
   };
 
@@ -108,6 +108,8 @@ export default function EnquiriesPage() {
         dealer_id: form.source === 'dealer' ? form.dealer_id||null : null,
         tractor_id: form.tractor_id || null,
         offered_price: form.offered_price ? parseInt(String(form.offered_price).replace(/,/g,'')) : null,
+        market_rate: form.market_rate ? parseInt(String(form.market_rate).replace(/,/g,'')) : null,
+        sold_price: form.sold_price ? parseInt(String(form.sold_price).replace(/,/g,'')) : null,
         req_price_max: form.req_price_max ? parseInt(String(form.req_price_max).replace(/,/g,'')) : null,
         req_hp: form.req_hp ? parseInt(form.req_hp) : null,
         req_year: form.req_year || null,
@@ -204,7 +206,7 @@ export default function EnquiriesPage() {
     return list.filter(eq => {
       const eqStr = [
         eq.buyer_name, eq.buyer_phone, eq.buyer_whatsapp, eq.buyer_location,
-        eq.source, eq.status, eq.notes, eq.offered_price,
+        eq.source, eq.status, eq.notes, eq.offered_price, eq.market_rate, eq.sold_price,
         eq.req_make, eq.req_model, eq.req_year, eq.req_condition, eq.req_notes,
         eq.tractors?.make, eq.tractors?.model, eq.tractors?.year,
         eq.tractors?.location_text, eq.tractors?.rc_number,
@@ -362,7 +364,11 @@ export default function EnquiriesPage() {
                           </div>
                         )}
                       </td>
-                      <td><span style={{ fontWeight:600, color:'var(--green)', fontSize:13 }}>{PRICE_FMT(eq.offered_price)}</span></td>
+                      <td>
+                        {eq.offered_price && <div style={{ fontSize:12, color:'var(--green)' }}>Off: {PRICE_FMT(eq.offered_price)}</div>}
+                        {eq.market_rate && <div style={{ fontSize:12, color:'var(--amber-text)' }}>Mkt: {PRICE_FMT(eq.market_rate)}</div>}
+                        {eq.sold_price && <div style={{ fontSize:12, color:'var(--green-dark)', fontWeight:700 }}>Sold: {PRICE_FMT(eq.sold_price)}</div>}
+                      </td>
                       <td><span className={`tag ${eq.source==='broker'?'tag-blue':eq.source==='dealer'?'tag-amber':'tag-gray'}`} style={{ fontSize:10 }}>{eq.source}</span></td>
                       <td>
                         <select className="form-input form-select" style={{ fontSize:12, padding:'3px 24px 3px 8px', width:120 }}
@@ -457,7 +463,10 @@ export default function EnquiriesPage() {
 
                     {/* Price & status */}
                     <div style={{ minWidth:140 }}>
-                      {eq.offered_price && <div style={{ fontWeight:700, color:'var(--green)', fontSize:15, marginBottom:6 }}>{PRICE_FMT(eq.offered_price)}</div>}
+                      {eq.offered_price && <div style={{ fontWeight:700, color:'var(--green)', fontSize:15, marginBottom:2 }}>Offered: {PRICE_FMT(eq.offered_price)}</div>}
+                      {eq.market_rate && <div style={{ fontSize:12, color:'var(--amber-text)', marginBottom:2 }}>Market: {PRICE_FMT(eq.market_rate)}</div>}
+                      {eq.sold_price && <div style={{ fontSize:12, color:'var(--green-dark)', fontWeight:700, marginBottom:6 }}>Sold: {PRICE_FMT(eq.sold_price)}</div>}
+                      {!eq.offered_price && !eq.market_rate && !eq.sold_price && <div style={{ marginBottom:6 }} />}
                       <select className="form-input form-select" style={{ fontSize:12, padding:'4px 24px 4px 8px', width:'100%' }}
                         value={eq.status} onChange={e => handleStatusChange(eq.id, e.target.value)}>
                         {['New','Negotiating','Sold','Lost'].map(s => <option key={s}>{s}</option>)}
@@ -687,6 +696,20 @@ export default function EnquiriesPage() {
                   <select className="form-input form-select" value={form.status} onChange={e => set('status',e.target.value)}>
                     {['New','Negotiating','Sold','Lost'].map(s => <option key={s}>{s}</option>)}
                   </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Market Rate (Rs.)
+                    <span style={{ fontWeight:400, color:'var(--gray-400)', marginLeft:6, textTransform:'none', fontSize:11 }}>— buyer's stated market rate</span>
+                  </label>
+                  <input className="form-input" value={form.market_rate} onChange={e => set('market_rate',e.target.value)} placeholder="e.g. 3,00,000" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Sold Price (Rs.)
+                    <span style={{ fontWeight:400, color:'var(--gray-400)', marginLeft:6, textTransform:'none', fontSize:11 }}>— final price if sold</span>
+                  </label>
+                  <input className="form-input" value={form.sold_price} onChange={e => set('sold_price',e.target.value)} placeholder="e.g. 3,25,000" />
                 </div>
               </div>
               <div className="form-group"><label className="form-label">Notes</label><textarea className="form-input form-textarea" value={form.notes} onChange={e => set('notes',e.target.value)} /></div>
