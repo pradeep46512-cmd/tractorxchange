@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { createTractor, getBrokers, getDealers, getEnquiries, supabase } from '../lib/supabase';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createTractor, getBrokers, getDealers, getEnquiries, uploadPhoto, updateTractor, supabase } from '../lib/supabase';
 import { INDIAN_STATES } from '../lib/indianStates';
 
 const INITIAL = {
@@ -134,6 +134,9 @@ export default function TractorModal({ onClose, onSaved }) {
   const [enquiries, setEnquiries] = useState([]);
   const [selectedBrokers, setSelectedBrokers] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState([]); // File objects
+  const [photoPreviews, setPhotoPreviews] = useState([]); // object URLs
+  const photoRef = useRef();
 
   useEffect(() => {
     getBrokers().then(setBrokers).catch(() => {});
@@ -176,13 +179,30 @@ export default function TractorModal({ onClose, onSaved }) {
     return { text: 'Possible', color: 'var(--gray-600)', bg: 'var(--gray-100)' };
   };
 
+  const handlePhotoSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const remaining = 5 - photoFiles.length;
+    if (remaining <= 0) { alert('Maximum 5 photos allowed.'); return; }
+    const toAdd = files.slice(0, remaining);
+    setPhotoFiles(prev => [...prev, ...toAdd]);
+    setPhotoPreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))]);
+    e.target.value = '';
+  };
+
+  const removePhoto = (i) => {
+    URL.revokeObjectURL(photoPreviews[i]);
+    setPhotoFiles(prev => prev.filter((_, idx) => idx !== i));
+    setPhotoPreviews(prev => prev.filter((_, idx) => idx !== i));
+  };
+
   const handleSubmit = async () => {
     if (!form.make || !form.model) return alert('Make and Model are required.');
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const { state, ...rest } = form;
-      await createTractor({
+      const tractor = await createTractor({
         ...rest,
         area_office: state,
         year: form.year ? parseInt(form.year) : null,
@@ -192,6 +212,15 @@ export default function TractorModal({ onClose, onSaved }) {
         owner_id: user?.id || null,
         owner_email: user?.email || null,
       }, selectedBrokers);
+
+      // Upload photos and insert into tractor_photos
+      for (let i = 0; i < photoFiles.length; i++) {
+        const url = await uploadPhoto(tractor.id, photoFiles[i]);
+        const isCover = i === 0;
+        await supabase.from('tractor_photos').insert([{ tractor_id: tractor.id, photo_url: url, is_cover: isCover }]);
+        if (isCover) await updateTractor(tractor.id, { cover_photo: url });
+      }
+
       onSaved();
     } catch (e) { alert(e.message); }
     finally { setSaving(false); }
@@ -297,6 +326,41 @@ export default function TractorModal({ onClose, onSaved }) {
             </div>
           </div>
 
+          {/* Photos */}
+          <div className="form-group">
+            <label className="form-label">
+              Photos
+              <span style={{ fontSize:11, fontWeight:400, color:'var(--gray-400)', marginLeft:6, textTransform:'none' }}>
+                — up to 5, first photo becomes cover
+              </span>
+            </label>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8, alignItems:'flex-start' }}>
+              {photoPreviews.map((src, i) => (
+                <div key={i} style={{ position:'relative', width:80, height:80, borderRadius:8, overflow:'hidden', border:'1px solid var(--border-md)', flexShrink:0 }}>
+                  <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  {i === 0 && (
+                    <span style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.5)', color:'#fff', fontSize:9, textAlign:'center', padding:'2px 0', fontWeight:700 }}>COVER</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    style={{ position:'absolute', top:3, right:3, background:'rgba(0,0,0,0.55)', border:'none', borderRadius:'50%', width:18, height:18, cursor:'pointer', color:'#fff', fontSize:12, lineHeight:'18px', textAlign:'center', padding:0 }}
+                  >×</button>
+                </div>
+              ))}
+              {photoFiles.length < 5 && (
+                <div
+                  onClick={() => photoRef.current?.click()}
+                  style={{ width:80, height:80, borderRadius:8, border:'2px dashed var(--border-md)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'var(--gray-400)', gap:4, flexShrink:0, background:'var(--gray-50)' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span style={{ fontSize:10 }}>Add Photo</span>
+                </div>
+              )}
+            </div>
+            <input ref={photoRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handlePhotoSelect} />
+          </div>
+
           {/* Description */}
           <div className="form-group">
             <label className="form-label">Description</label>
@@ -389,7 +453,7 @@ export default function TractorModal({ onClose, onSaved }) {
         </div>
         <div className="modal-footer">
           <button className="btn" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving ? 'Saving...' : 'Add Tractor'}</button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving ? (photoFiles.length ? 'Saving & uploading photos…' : 'Saving...') : 'Add Tractor'}</button>
         </div>
       </div>
     </div>
