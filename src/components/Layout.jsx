@@ -46,7 +46,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-export default function Layout({ session }) {
+export default function Layout({ session, role }) {
   const navigate = useNavigate();
   const email = session?.user?.email || '';
   const initials = email.slice(0, 2).toUpperCase();
@@ -69,15 +69,9 @@ export default function Layout({ session }) {
           <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
             <TractorIcon size={16} /> Tractors
           </NavLink>
-          <NavLink to="/brokers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <PeopleIcon size={16} /> Brokers
-          </NavLink>
-          <NavLink to="/dealers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <StoreIcon size={16} /> Dealers
-          </NavLink>
-          <NavLink to="/enquiries" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <EnquiryIcon size={16} /> Enquiries
-          </NavLink>
+          {role !== 'field_agent' && <NavLink to="/brokers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}><PeopleIcon size={16} /> Brokers</NavLink>}
+          {role !== 'field_agent' && <NavLink to="/dealers" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}><StoreIcon size={16} /> Dealers</NavLink>}
+          {role !== 'field_agent' && <NavLink to="/enquiries" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}><EnquiryIcon size={16} /> Enquiries</NavLink>}
           <a href="/marketplace" target="_blank" rel="noreferrer" className="nav-link">
             <MarketIcon size={16} /> Marketplace ↗
           </a>
@@ -85,7 +79,7 @@ export default function Layout({ session }) {
         <div className="sidebar-footer">
           <div className="flex flex-center gap-8" style={{ marginBottom: 8 }}>
             <div className="avatar av-green">{initials}</div>
-            <div className="sidebar-user"><strong>{email}</strong>Internal Team</div>
+            <div className="sidebar-user"><strong>{email}</strong>{role === 'field_agent' ? 'Field Agent' : 'Internal Team'}</div>
           </div>
           <button className="btn btn-sm" style={{ width: '100%' }} onClick={handleLogout}>Sign Out</button>
         </div>

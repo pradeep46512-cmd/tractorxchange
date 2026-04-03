@@ -21,7 +21,6 @@ class ErrorBoundary extends React.Component {
         <div style={{ padding: 40, fontFamily: 'sans-serif', maxWidth: 600, margin: '60px auto', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
           <h2 style={{ marginBottom: 8 }}>Something went wrong</h2>
-          <p style={{ color: '#888', marginBottom: 16 }}>Check that your Supabase environment variables are set correctly in Vercel.</p>
           <pre style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, fontSize: 12, textAlign: 'left', overflow: 'auto' }}>
             {this.state.error?.message}
           </pre>
@@ -31,6 +30,21 @@ class ErrorBoundary extends React.Component {
     }
     return this.props.children;
   }
+}
+
+// Extract role from user metadata
+// Admin: no role set, or app_role = 'admin'
+// Field Agent: app_role = 'field_agent'
+function getRole(session) {
+  if (!session) return null;
+  const meta = session.user?.user_metadata || {};
+  return meta.app_role === 'field_agent' ? 'field_agent' : 'admin';
+}
+
+// Guard: redirect field agents away from admin-only pages
+function AdminRoute({ role, children }) {
+  if (role === 'field_agent') return <Navigate to="/" replace />;
+  return children;
 }
 
 export default function App() {
@@ -48,24 +62,28 @@ export default function App() {
 
   if (loading) return <div className="app-loading"><div className="spinner" /><span>Loading...</span></div>;
 
+  const role = getRole(session);
+
   return (
     <ErrorBoundary>
     <BrowserRouter>
       <Routes>
-        {/* Public marketplace route — no auth needed */}
+        {/* Public */}
         <Route path="/market/:token" element={<PublicTractorPage />} />
         <Route path="/marketplace" element={<MarketplacePage isPublic={true} />} />
 
         {/* Auth */}
         <Route path="/login" element={session ? <Navigate to="/" /> : <LoginPage />} />
 
-        {/* Protected internal app */}
-        <Route path="/" element={session ? <Layout session={session} /> : <Navigate to="/login" />}>
-          <Route index element={<TractorsPage />} />
-          <Route path="tractors/:id" element={<TractorDetailPage />} />
-          <Route path="brokers" element={<BrokersPage />} />
-          <Route path="dealers" element={<DealersPage />} />
-          <Route path="enquiries" element={<EnquiriesPage />} />
+        {/* Protected */}
+        <Route path="/" element={session ? <Layout session={session} role={role} /> : <Navigate to="/login" />}>
+          <Route index element={<TractorsPage role={role} userId={session?.user?.id} />} />
+          <Route path="tractors/:id" element={<TractorDetailPage role={role} />} />
+
+          {/* Admin-only pages */}
+          <Route path="brokers" element={<AdminRoute role={role}><BrokersPage /></AdminRoute>} />
+          <Route path="dealers" element={<AdminRoute role={role}><DealersPage /></AdminRoute>} />
+          <Route path="enquiries" element={<AdminRoute role={role}><EnquiriesPage /></AdminRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

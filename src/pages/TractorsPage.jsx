@@ -93,39 +93,16 @@ function CardView({ tractors, navigate, shareTractor, handleDelete }) {
                 </div>
               )}
               <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:8 }}>
-
-                {/* ── Share tractor ── */}
-                <button className="btn btn-sm" style={{ width:'100%', justifyContent:'center' }} onClick={e => shareTractor(e, t)}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share This Tractor
+                <button className="btn btn-sm btn-primary" style={{ width:'100%', justifyContent:'center' }}
+                  onClick={e => { e.stopPropagation(); navigate('/tractors/' + t.id); }}>
+                  View Details
                 </button>
-
-                {/* ── WhatsApp to assigned broker(s) ── */}
-                {t.tractor_brokers?.length > 0 && t.tractor_brokers.map(tb => tb.brokers).filter(Boolean).map(b => (
-                  <a key={b.id}
-                    className="btn btn-sm btn-wa"
-                    style={{ width:'100%', justifyContent:'center' }}
-                    href={'https://wa.me/' + (b.whatsapp||b.phone||'').replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi ' + b.name + ', tractor available: ' + t.make + ' ' + t.model + ' (' + t.year + ') — ' + PRICE_FMT(t.expected_price) + ' — ' + window.location.origin + '/market/' + t.share_token)}
-                    onClick={e => e.stopPropagation()}
-                    target="_blank" rel="noreferrer"
-                  >
-                    {WA_ICON} WA Broker: {b.name}
-                  </a>
-                ))}
-
-                {/* ── Call broker(s) ── */}
-                {t.tractor_brokers?.length > 0 && t.tractor_brokers.map(tb => tb.brokers).filter(b => b?.phone).map(b => (
-                  <a key={b.id + '_call'}
-                    className="btn btn-sm btn-call"
-                    style={{ width:'100%', justifyContent:'center' }}
-                    href={'tel:' + b.phone}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    {CALL_ICON} Call Broker: {b.name}
-                  </a>
-                ))}
-
-                {/* ── Delete ── */}
-                <button className="btn btn-sm btn-danger" style={{ width:'100%', justifyContent:'center' }} onClick={e => handleDelete(e, t.id)}>✕ Delete</button>
+                <div style={{ display:'flex', gap:6 }}>
+                  <button className="btn btn-sm" style={{ flex:1, justifyContent:'center' }} onClick={e => shareTractor(e, t)}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share
+                  </button>
+                  <button className="btn btn-sm btn-danger" style={{ flexShrink:0 }} onClick={e => handleDelete(e, t.id)}>✕</button>
+                </div>
               </div>
             </div>
           </div>
@@ -215,22 +192,10 @@ function ListView({ tractors, navigate, shareTractor, handleDelete }) {
                 {/* Actions */}
                 <td>
                   <div className="flex gap-8" style={{ flexWrap: 'nowrap' }}>
-                    <button className="btn btn-sm" title="Share Tractor" onClick={e => shareTractor(e, t)}>
+                    <button className="btn btn-sm btn-primary" onClick={e => { e.stopPropagation(); navigate('/tractors/' + t.id); }}>Details</button>
+                    <button className="btn btn-sm" title="Share" onClick={e => shareTractor(e, t)}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                     </button>
-                    {t.tractor_brokers?.filter(tb => tb.brokers?.phone).map(tb => (
-                      <a key={tb.brokers.id} className="btn btn-sm btn-wa" title={'WA: ' + tb.brokers.name}
-                        href={'https://wa.me/' + (tb.brokers.whatsapp||tb.brokers.phone).replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent('Hi ' + tb.brokers.name + ', tractor: ' + t.make + ' ' + t.model + ' — ' + window.location.origin + '/market/' + t.share_token)}
-                        target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
-                        {WA_ICON}
-                      </a>
-                    ))}
-                    {t.tractor_brokers?.filter(tb => tb.brokers?.phone).map(tb => (
-                      <a key={tb.brokers.id + '_c'} className="btn btn-sm btn-call" title={'Call: ' + tb.brokers.name}
-                        href={'tel:' + tb.brokers.phone} onClick={e => e.stopPropagation()}>
-                        {CALL_ICON}
-                      </a>
-                    ))}
                     <button className="btn btn-sm btn-danger" onClick={e => handleDelete(e, t.id)}>✕</button>
                   </div>
                 </td>
@@ -266,7 +231,7 @@ const ListIcon = () => (
 );
 
 // ── Main page ──────────────────────────────────────────────
-export default function TractorsPage() {
+export default function TractorsPage({ role, userId }) {
   const [tractors, setTractors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -286,10 +251,15 @@ export default function TractorsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setTractors(await getTractors()); }
+    try {
+      const data = await getTractors();
+      setTractors(role === 'field_agent' && userId
+        ? data.filter(t => t.owner_id === userId)
+        : data);
+    }
     catch (e) { alert('Error loading tractors: ' + e.message); }
     finally { setLoading(false); }
-  }, []);
+  }, [role, userId]);
 
   useEffect(() => { load(); }, [load]);
 
