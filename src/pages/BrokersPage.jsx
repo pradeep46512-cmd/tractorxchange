@@ -173,9 +173,6 @@ export default function BrokersPage() {
     return next;
   });
 
-  const allSelected = filtered.length > 0 && filtered.every(b => selected.has(b.id));
-  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(b => b.id)));
-
   const locations = [...new Set(brokers.map(b => b.location).filter(Boolean))].sort();
 
   const filtered = brokers.filter(b => {
@@ -186,6 +183,9 @@ export default function BrokersPage() {
     const matchStatus = filterStatus === 'All' || (filterStatus === 'Active' ? b.is_active : !b.is_active);
     return matchSearch && matchLoc && matchStatus;
   });
+
+  const allSelected = filtered.length > 0 && filtered.every(b => selected.has(b.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(b => b.id)));
 
   return (
     <>

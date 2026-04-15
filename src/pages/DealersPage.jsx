@@ -53,9 +53,6 @@ export default function DealersPage() {
     return next;
   });
 
-  const allSelected = filtered.length > 0 && filtered.every(d => selected.has(d.id));
-  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(d => d.id)));
-
   // Dynamic city list based on selected state
   const citiesInState = [...new Set(
     dealers.filter(d => !filterState || d.state === filterState).map(d => d.city).filter(Boolean)
@@ -69,6 +66,9 @@ export default function DealersPage() {
     const matchCity = !filterCity || d.city === filterCity;
     return matchSearch && matchState && matchCity;
   });
+
+  const allSelected = filtered.length > 0 && filtered.every(d => selected.has(d.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(d => d.id)));
 
   return (
     <>
