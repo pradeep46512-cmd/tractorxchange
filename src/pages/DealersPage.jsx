@@ -18,6 +18,8 @@ export default function DealersPage() {
   const [filterCity, setFilterCity] = useState('');
   const [search, setSearch] = useState('');
 
+  const [selected, setSelected] = useState(new Set());
+
   const load = async () => { setLoading(true); try { setDealers(await getDealers()); } finally { setLoading(false); } };
   useEffect(() => { load(); }, []);
   const openAdd = () => { setEditing(null); setForm(INIT); setShowModal(true); };
@@ -35,6 +37,24 @@ export default function DealersPage() {
     if (!window.confirm('Delete this dealer?')) return;
     try { await deleteDealer(id); load(); } catch (e) { alert(e.message); }
   };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selected.size} selected dealer(s)? This cannot be undone.`)) return;
+    try {
+      await Promise.all([...selected].map(id => deleteDealer(id)));
+      setSelected(new Set());
+      load();
+    } catch (e) { alert(e.message); }
+  };
+
+  const toggleSelect = (id) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const allSelected = filtered.length > 0 && filtered.every(d => selected.has(d.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(d => d.id)));
 
   // Dynamic city list based on selected state
   const citiesInState = [...new Set(
@@ -64,6 +84,11 @@ export default function DealersPage() {
             <option value="">All Cities</option>
             {citiesInState.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+          {selected.size > 0 && (
+            <button className="btn btn-danger" onClick={handleBulkDelete}>
+              🗑 Delete {selected.size} Selected
+            </button>
+          )}
           <button className="btn" onClick={() => exportDealersToExcel(filtered)}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -83,11 +108,19 @@ export default function DealersPage() {
           </div>
           {loading ? <div style={{ padding:40, textAlign:'center' }}><div className="spinner" style={{ margin:'0 auto' }} /></div> : (
             <table className="data-table">
-              <thead><tr><th>Dealership</th><th>Contact</th><th>Phone</th><th>City / Area Office</th><th>Brands</th><th>Status</th><th></th></tr></thead>
+              <thead><tr>
+            <th style={{ width: 36 }}>
+              <input type="checkbox" checked={allSelected} onChange={toggleAll} title="Select all" />
+            </th>
+            <th>Dealership</th><th>Contact</th><th>Phone</th><th>City / Area Office</th><th>Brands</th><th>Status</th><th></th>
+          </tr></thead>
               <tbody>
-                {filtered.length === 0 && <tr><td colSpan="7" style={{ textAlign:'center', color:'var(--gray-400)', padding:32 }}>No dealers match your filters.</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan="8" style={{ textAlign:'center', color:'var(--gray-400)', padding:32 }}>No dealers match your filters.</td></tr>}
                 {filtered.map(d => (
-                  <tr key={d.id}>
+                  <tr key={d.id} style={{ background: selected.has(d.id) ? 'var(--blue-light)' : undefined }}>
+                    <td>
+                      <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleSelect(d.id)} />
+                    </td>
                     <td>
                       <div className="flex flex-center gap-8">
                         <div className="avatar av-blue">{d.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>

@@ -138,6 +138,8 @@ export default function BrokersPage() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [historyBroker, setHistoryBroker] = useState(null); // broker to show history for
 
+  const [selected, setSelected] = useState(new Set());
+
   const load = async () => { setLoading(true); try { setBrokers(await getBrokers()); } finally { setLoading(false); } };
   useEffect(() => { load(); }, []);
   const openAdd = () => { setEditing(null); setForm(INIT); setShowModal(true); };
@@ -155,6 +157,24 @@ export default function BrokersPage() {
     if (!window.confirm('Delete this broker?')) return;
     try { await deleteBroker(id); load(); } catch (e) { alert(e.message); }
   };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selected.size} selected broker(s)? This cannot be undone.`)) return;
+    try {
+      await Promise.all([...selected].map(id => deleteBroker(id)));
+      setSelected(new Set());
+      load();
+    } catch (e) { alert(e.message); }
+  };
+
+  const toggleSelect = (id) => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const allSelected = filtered.length > 0 && filtered.every(b => selected.has(b.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(filtered.map(b => b.id)));
 
   const locations = [...new Set(brokers.map(b => b.location).filter(Boolean))].sort();
 
@@ -180,6 +200,11 @@ export default function BrokersPage() {
           <select className="form-input form-select" style={{ width: 110 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option>All</option><option>Active</option><option>Inactive</option>
           </select>
+          {selected.size > 0 && (
+            <button className="btn btn-danger" onClick={handleBulkDelete}>
+              🗑 Delete {selected.size} Selected
+            </button>
+          )}
           <button className="btn" onClick={() => exportBrokersToExcel(filtered)}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -201,6 +226,9 @@ export default function BrokersPage() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: 36 }}>
+                    <input type="checkbox" checked={allSelected} onChange={toggleAll} title="Select all" />
+                  </th>
                   <th>Broker</th>
                   <th>Phone</th>
                   <th>Location</th>
@@ -211,9 +239,12 @@ export default function BrokersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 && <tr><td colSpan="7" style={{ textAlign:'center', color:'var(--gray-400)', padding:32 }}>No brokers match your filters.</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan="8" style={{ textAlign:'center', color:'var(--gray-400)', padding:32 }}>No brokers match your filters.</td></tr>}
                 {filtered.map(b => (
-                  <tr key={b.id}>
+                  <tr key={b.id} style={{ background: selected.has(b.id) ? 'var(--green-light)' : undefined }}>
+                    <td>
+                      <input type="checkbox" checked={selected.has(b.id)} onChange={() => toggleSelect(b.id)} />
+                    </td>
                     <td>
                       <div className="flex flex-center gap-8">
                         <div className="avatar av-green">{b.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
