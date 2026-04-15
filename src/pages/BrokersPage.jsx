@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getBrokers, createBroker, updateBroker, deleteBroker, getBrokerPurchaseHistory } from '../lib/supabase';
 import BulkImportModal from '../components/BulkImportModal.jsx';
+import { exportBrokersToExcel } from '../lib/exportToExcel';
 
 const INIT = { name:'', phone:'', whatsapp:'', email:'', location:'', speciality:'', is_active:true, notes:'' };
 const PRICE_FMT = (n) => n ? '₹' + Number(n).toLocaleString('en-IN') : '—';
@@ -179,6 +180,12 @@ export default function BrokersPage() {
           <select className="form-input form-select" style={{ width: 110 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option>All</option><option>Active</option><option>Inactive</option>
           </select>
+          <button className="btn" onClick={() => exportBrokersToExcel(filtered)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export Excel
+          </button>
           <button className="btn" onClick={() => setShowImport(true)}>Bulk Import</button>
           <button className="btn btn-primary" onClick={openAdd}>+ Add Broker</button>
         </div>

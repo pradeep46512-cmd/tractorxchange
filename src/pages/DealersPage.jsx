@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getDealers, createDealer, updateDealer, deleteDealer } from '../lib/supabase';
 import { INDIAN_STATES } from '../lib/indianStates';
 import BulkImportModal from '../components/BulkImportModal.jsx';
+import { exportDealersToExcel } from '../lib/exportToExcel';
 
 const INIT = { name:'', contact_person:'', phone:'', whatsapp:'', email:'', city:'', state:'', brands:'', is_active:true, notes:'' };
 
@@ -63,6 +64,12 @@ export default function DealersPage() {
             <option value="">All Cities</option>
             {citiesInState.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+          <button className="btn" onClick={() => exportDealersToExcel(filtered)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export Excel
+          </button>
           <button className="btn" onClick={() => setShowImport(true)}>Bulk Import</button>
           <button className="btn btn-primary" onClick={openAdd}>+ Add Dealer</button>
         </div>
