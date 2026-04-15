@@ -67,3 +67,63 @@ export function exportEnquiriesToExcel(enquiries) {
   const fileName = `TractorXchange_Enquiries_${new Date().toISOString().slice(0, 10)}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }
+
+export function exportBrokersToExcel(brokers) {
+  const XLSX = window.XLSX;
+  if (!XLSX) { alert('Excel library not loaded yet. Please wait a moment and try again.'); return; }
+
+  const rows = brokers.map(b => ({
+    'Name': b.name || '',
+    'Phone': b.phone || '',
+    'WhatsApp': b.whatsapp || '',
+    'Email': b.email || '',
+    'Location': b.location || '',
+    'Speciality': b.speciality || '',
+    'Status': b.is_active ? 'Active' : 'Inactive',
+    'Notes': b.notes || '',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 24 },
+    { wch: 18 }, { wch: 20 }, { wch: 10 }, { wch: 32 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Brokers');
+
+  const fileName = `TractorXchange_Brokers_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
+
+export function exportDealersToExcel(dealers) {
+  const XLSX = window.XLSX;
+  if (!XLSX) { alert('Excel library not loaded yet. Please wait a moment and try again.'); return; }
+
+  const rows = dealers.map(d => ({
+    'Dealership Name': d.name || '',
+    'Contact Person': d.contact_person || '',
+    'Phone': d.phone || '',
+    'WhatsApp': d.whatsapp || '',
+    'Email': d.email || '',
+    'City': d.city || '',
+    'Area Office': d.state || '',
+    'Brands': d.brands || '',
+    'Status': d.is_active ? 'Active' : 'Inactive',
+    'Notes': d.notes || '',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 22 }, { wch: 18 }, { wch: 16 }, { wch: 16 },
+    { wch: 24 }, { wch: 16 }, { wch: 22 }, { wch: 20 },
+    { wch: 10 }, { wch: 32 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Dealers');
+
+  const fileName = `TractorXchange_Dealers_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
+

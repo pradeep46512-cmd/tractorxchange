@@ -60,7 +60,7 @@ function PhotoLightbox({ photo, name, onClose }) {
 }
 
 // ── Card View ──────────────────────────────────────────────
-function CardView({ tractors, navigate, shareTractor, handleDelete }) {
+function CardView({ tractors, navigate, shareTractor, handleDelete, role }) {
   const [lightbox, setLightbox] = useState(null);
 
   return (
@@ -86,6 +86,9 @@ function CardView({ tractors, navigate, shareTractor, handleDelete }) {
               <div className="tcard-name">{t.make} {t.model}</div>
               <div className="tcard-meta">{t.year} · {t.hours_used}{t.engine_hp ? ' · ' + t.engine_hp + ' HP' : ''} · {t.location_text}</div>
               <div className="tcard-price">{PRICE_FMT(t.expected_price)}</div>
+              {role !== 'field_agent' && t.owner_email && (
+                <div style={{ fontSize:11, color:'var(--gray-400)', marginBottom:4 }}>👤 {t.owner_email}</div>
+              )}
               {t.description && (
                 <div style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 8, lineHeight: 1.5,
                   display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -121,7 +124,7 @@ function CardView({ tractors, navigate, shareTractor, handleDelete }) {
 }
 
 // ── List View ──────────────────────────────────────────────
-function ListView({ tractors, navigate, shareTractor, handleDelete }) {
+function ListView({ tractors, navigate, shareTractor, handleDelete, role }) {
   const [lightbox, setLightbox] = useState(null);
 
   return (
@@ -158,6 +161,9 @@ function ListView({ tractors, navigate, shareTractor, handleDelete }) {
                 <td onClick={() => navigate(`/tractors/${t.id}`)}>
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{t.make} {t.model}</div>
                   <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 2 }}>{t.year}</div>
+                  {role !== 'field_agent' && t.owner_email && (
+                    <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 2 }}>👤 {t.owner_email}</div>
+                  )}
                 </td>
 
                 {/* Details */}
@@ -455,6 +461,7 @@ export default function TractorsPage({ role, userId }) {
             navigate={navigate}
             shareTractor={shareTractor}
             handleDelete={handleDelete}
+            role={role}
           />
         ) : (
           <ListView
@@ -462,6 +469,7 @@ export default function TractorsPage({ role, userId }) {
             navigate={navigate}
             shareTractor={shareTractor}
             handleDelete={handleDelete}
+            role={role}
           />
         )}
       </div>
@@ -478,14 +486,14 @@ export default function TractorsPage({ role, userId }) {
             <div style={{ height:1, flex:1, background:'var(--border)' }} />
           </div>
           {viewMode === 'card' ? (
-            <CardView tractors={filteredSold} navigate={navigate} shareTractor={shareTractor} handleDelete={handleDelete} />
+            <CardView tractors={filteredSold} navigate={navigate} shareTractor={shareTractor} handleDelete={handleDelete} role={role} />
           ) : (
-            <ListView tractors={filteredSold} navigate={navigate} shareTractor={shareTractor} handleDelete={handleDelete} />
+            <ListView tractors={filteredSold} navigate={navigate} shareTractor={shareTractor} handleDelete={handleDelete} role={role} />
           )}
         </div>
       )}
 
-      {showModal && <TractorModal onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); load(); }} />}
+      {showModal && <TractorModal onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); load(); }} role={role} />}
     </>
   );
 }

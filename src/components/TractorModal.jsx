@@ -127,7 +127,7 @@ function scoreEnquiry(eq, form) {
   return score / maxScore;
 }
 
-export default function TractorModal({ onClose, onSaved }) {
+export default function TractorModal({ onClose, onSaved, role }) {
   const [form, setForm] = useState(INITIAL);
   const [brokers, setBrokers] = useState([]);
   const [dealers, setDealers] = useState([]);
@@ -138,11 +138,26 @@ export default function TractorModal({ onClose, onSaved }) {
   const [photoPreviews, setPhotoPreviews] = useState([]); // object URLs
   const photoRef = useRef();
 
+  const [fieldsLocked, setFieldsLocked] = useState(false);
+
   useEffect(() => {
     getBrokers().then(setBrokers).catch(() => {});
-    getDealers().then(setDealers).catch(() => {});
     getEnquiries().then(data => setEnquiries(data.filter(e => e.status !== 'Sold'))).catch(() => {});
-  }, []);
+    getDealers().then(dl => {
+      setDealers(dl);
+      if (role === 'field_agent') {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          if (user?.email) {
+            const match = dl.find(d => d.email?.toLowerCase() === user.email.toLowerCase());
+            if (match) {
+              setForm(prev => ({ ...prev, state: match.state || '', location_text: match.city || '' }));
+              setFieldsLocked(true);
+            }
+          }
+        });
+      }
+    }).catch(() => {});
+  }, [role]);
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
@@ -296,8 +311,11 @@ export default function TractorModal({ onClose, onSaved }) {
           {/* State & Dealer Location */}
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Area Office</label>
-              <select className="form-input form-select" value={form.state} onChange={e => handleStateChange(e.target.value)}>
+              <label className="form-label">
+                Area Office
+                {fieldsLocked && <span style={{ fontSize:11, fontWeight:400, color:'var(--green-dark)', marginLeft:6, textTransform:'none' }}>— auto-set from your dealer profile</span>}
+              </label>
+              <select className="form-input form-select" value={form.state} onChange={e => handleStateChange(e.target.value)} disabled={fieldsLocked}>
                 <option value="">Select area office...</option>
                 {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -312,7 +330,7 @@ export default function TractorModal({ onClose, onSaved }) {
                 )}
               </label>
               {dealersInState.length > 0 ? (
-                <select className="form-input form-select" value={form.location_text} onChange={e => set('location_text', e.target.value)}>
+                <select className="form-input form-select" value={form.location_text} onChange={e => set('location_text', e.target.value)} disabled={fieldsLocked}>
                   <option value="">Select dealer location...</option>
                   {dealersInState.map(d => (
                     <option key={d.id} value={d.city}>{d.city} - {d.name}</option>
@@ -321,7 +339,7 @@ export default function TractorModal({ onClose, onSaved }) {
               ) : (
                 <input className="form-input"
                   placeholder={form.state ? 'Type location manually' : 'Select area office first'}
-                  value={form.location_text} onChange={e => set('location_text', e.target.value)} />
+                  value={form.location_text} onChange={e => set('location_text', e.target.value)} disabled={fieldsLocked} />
               )}
             </div>
           </div>

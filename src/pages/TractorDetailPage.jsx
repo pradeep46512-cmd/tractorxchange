@@ -9,7 +9,7 @@ import {
 const PRICE_FMT = (n) => n ? '₹' + Number(n).toLocaleString('en-IN') : '—';
 const STATUS_OPTIONS = ['Available', 'Pending', 'Sold'];
 
-export default function TractorDetailPage() {
+export default function TractorDetailPage({ role }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [tractor, setTractor] = useState(null);
@@ -436,6 +436,7 @@ export default function TractorDetailPage() {
                   ['Area Office', tractor.area_office],
                   ['Location', tractor.location_text],
                   ['Sold On', tractor.sold_at ? new Date(tractor.sold_at).toLocaleDateString('en-IN') : null],
+                  ['Added By', role !== 'field_agent' ? tractor.owner_email : null],
                 ].filter(([,v]) => v).map(([label, val]) => (
                   <div key={label} className="info-row"><span className="label">{label}</span><span className="font-bold">{val}</span></div>
                 ))}
