@@ -151,7 +151,7 @@ function ListView({ tractors, navigate, shareTractor, handleDelete, role }) {
                     background: 'var(--gray-100)', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', flexShrink: 0, cursor: t.cover_photo ? 'zoom-in' : 'pointer' }}>
                     {t.cover_photo
-                      ? <img src={t.cover_photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ? <img src={t.cover_photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                       : <span style={{ fontSize: 20 }}>🚜</span>
                     }
                   </div>

@@ -355,7 +355,7 @@ export default function TractorModal({ onClose, onSaved, role }) {
             <div style={{ display:'flex', flexWrap:'wrap', gap:8, alignItems:'flex-start' }}>
               {photoPreviews.map((src, i) => (
                 <div key={i} style={{ position:'relative', width:80, height:80, borderRadius:8, overflow:'hidden', border:'1px solid var(--border-md)', flexShrink:0 }}>
-                  <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'contain', background:'var(--gray-100)' }} />
                   {i === 0 && (
                     <span style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.5)', color:'#fff', fontSize:9, textAlign:'center', padding:'2px 0', fontWeight:700 }}>COVER</span>
                   )}

@@ -510,7 +510,7 @@ export default function EnquiriesPage() {
                             onClick={() => linkTractor(eq.id, t.id)}
                           >
                             {t.cover_photo && (
-                              <img src={t.cover_photo} alt="" style={{ width:52, height:40, objectFit:'cover', borderRadius:6, flexShrink:0 }} />
+                              <img src={t.cover_photo} alt="" style={{ width:52, height:40, objectFit:'contain', background:'var(--gray-100)', borderRadius:6, flexShrink:0 }} />
                             )}
                             <div style={{ flex:1, minWidth:0 }}>
                               <div style={{ fontWeight:600, fontSize:13 }}>{t.make} {t.model} ({t.year})</div>
