@@ -5,6 +5,7 @@ import {
   uploadDocument, uploadPhoto, supabase,
   getBrokers, getDealers, createEnquiry, markTractorSoldToEnquiry, getEnquiries
 } from '../lib/supabase';
+import { INDIAN_STATES } from '../lib/indianStates';
 
 const PRICE_FMT = (n) => n ? '₹' + Number(n).toLocaleString('en-IN') : '—';
 const STATUS_OPTIONS = ['Available', 'Pending', 'Sold'];
@@ -19,6 +20,13 @@ export default function TractorDetailPage({ role }) {
   const [uploading, setUploading] = useState(false);
   const docRef = useRef();
   const photoRef = useRef();
+
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // ── Edit modal state ──────────────────────────────────
+  const [editModal, setEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
 
   // ── Mark Sold modal state ─────────────────────────────
   const [soldModal, setSoldModal] = useState(false);
@@ -62,7 +70,59 @@ export default function TractorDetailPage({ role }) {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id));
+  }, [id]);
+
+  const canEdit = tractor && (role !== 'field_agent' || tractor.owner_id === currentUserId);
+
+  const openEdit = () => {
+    setEditForm({
+      make: tractor.make || '',
+      model: tractor.model || '',
+      year: tractor.year || '',
+      hours_used: tractor.hours_used || '',
+      engine_hp: tractor.engine_hp || '',
+      condition: tractor.condition || 'Good',
+      expected_price: tractor.expected_price || '',
+      rc_number: tractor.rc_number || '',
+      serial_number: tractor.serial_number || '',
+      exchange_date: tractor.exchange_date ? tractor.exchange_date.slice(0, 10) : '',
+      area_office: tractor.area_office || '',
+      location_text: tractor.location_text || '',
+      description: tractor.description || '',
+    });
+    setEditModal(true);
+  };
+
+  const setEF = (k, v) => setEditForm(prev => ({ ...prev, [k]: v }));
+
+  const saveEdit = async () => {
+    if (!editForm.make || !editForm.model) return alert('Make and Model are required.');
+    setEditSaving(true);
+    try {
+      const updates = {
+        make: editForm.make,
+        model: editForm.model,
+        year: editForm.year ? parseInt(editForm.year) : null,
+        hours_used: editForm.hours_used || null,
+        engine_hp: editForm.engine_hp ? parseInt(editForm.engine_hp) : null,
+        condition: editForm.condition,
+        expected_price: editForm.expected_price ? parseInt(String(editForm.expected_price).replace(/,/g, '')) : null,
+        rc_number: editForm.rc_number || null,
+        serial_number: editForm.serial_number || null,
+        exchange_date: editForm.exchange_date || null,
+        area_office: editForm.area_office || null,
+        location_text: editForm.location_text || null,
+        description: editForm.description || null,
+      };
+      await updateTractor(id, updates);
+      setTractor(prev => ({ ...prev, ...updates }));
+      setEditModal(false);
+    } catch (e) { alert(e.message); }
+    finally { setEditSaving(false); }
+  };
 
   const handleStatusChange = async (status) => {
     // If already Sold — block any change
@@ -227,6 +287,9 @@ export default function TractorDetailPage({ role }) {
           </div>
         </div>
         <div className="topbar-actions" style={{ flexWrap:'wrap' }}>
+          {canEdit && tractor.status !== 'Sold' && (
+            <button className="btn btn-sm" onClick={openEdit}>✎ Edit</button>
+          )}
           {tractor.status === 'Sold' ? (
             <span className="status-badge status-Sold" style={{ fontSize:13, padding:'6px 14px' }}>
               Sold {tractor.sold_at ? '— ' + new Date(tractor.sold_at).toLocaleDateString('en-IN') : ''}
@@ -719,6 +782,96 @@ export default function TractorDetailPage({ role }) {
               <button className="btn" onClick={() => setSoldModal(false)}>Cancel</button>
               <button className="btn btn-primary" onClick={confirmMarkSold} disabled={markingSold}>
                 {markingSold ? 'Saving…' : 'Confirm Sale'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Tractor Modal ── */}
+      {editModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setEditModal(false)}>
+          <div className="modal" style={{ maxWidth: 620 }}>
+            <div className="modal-header">
+              <h3>Edit — {tractor.make} {tractor.model}</h3>
+              <button className="btn btn-sm btn-icon" onClick={() => setEditModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Make *</label>
+                  <input className="form-input" value={editForm.make} onChange={e => setEF('make', e.target.value)} placeholder="Mahindra" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Model *</label>
+                  <input className="form-input" value={editForm.model} onChange={e => setEF('model', e.target.value)} placeholder="475 DI" />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Year</label>
+                  <input className="form-input" type="number" value={editForm.year} onChange={e => setEF('year', e.target.value)} placeholder="2019" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Hours Used</label>
+                  <input className="form-input" value={editForm.hours_used} onChange={e => setEF('hours_used', e.target.value)} placeholder="1200 hrs" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Engine (HP)</label>
+                  <input className="form-input" type="number" value={editForm.engine_hp} onChange={e => setEF('engine_hp', e.target.value)} placeholder="45" />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">RC Number</label>
+                  <input className="form-input" value={editForm.rc_number} onChange={e => setEF('rc_number', e.target.value)} placeholder="RJ-14-CA-1234" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Serial / Chassis No.</label>
+                  <input className="form-input" value={editForm.serial_number} onChange={e => setEF('serial_number', e.target.value)} placeholder="MH475DI2019XXXX" />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Expected Price (Rs.)</label>
+                  <input className="form-input" value={editForm.expected_price} onChange={e => setEF('expected_price', e.target.value)} placeholder="4,50,000" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Condition</label>
+                  <select className="form-input form-select" value={editForm.condition} onChange={e => setEF('condition', e.target.value)}>
+                    {['Excellent', 'Good', 'Fair', 'Poor'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Date of Exchange</label>
+                  <input className="form-input" type="date" value={editForm.exchange_date} max={new Date().toISOString().slice(0,10)} onChange={e => setEF('exchange_date', e.target.value)} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">
+                    Area Office
+                    {role === 'field_agent' && <span style={{ fontSize:11, fontWeight:400, color:'var(--green-dark)', marginLeft:6, textTransform:'none' }}>— locked to your profile</span>}
+                  </label>
+                  <select className="form-input form-select" value={editForm.area_office} onChange={e => setEF('area_office', e.target.value)} disabled={role === 'field_agent'}>
+                    <option value="">Select area office…</option>
+                    {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Location</label>
+                  <input className="form-input" value={editForm.location_text} onChange={e => setEF('location_text', e.target.value)} placeholder="City" disabled={role === 'field_agent'} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea className="form-input form-textarea" value={editForm.description} onChange={e => setEF('description', e.target.value)} placeholder="Condition notes, service history…" />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn" onClick={() => setEditModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={saveEdit} disabled={editSaving}>
+                {editSaving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>

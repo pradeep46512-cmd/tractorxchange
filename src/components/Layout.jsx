@@ -96,22 +96,34 @@ export default function Layout({ session, role }) {
           <TractorIcon size={22} />
           <span>Tractors</span>
         </NavLink>
-        <NavLink to="/brokers" className={({ isActive }) => isActive ? 'active' : ''}>
-          <PeopleIcon size={22} />
-          <span>Brokers</span>
-        </NavLink>
-        <NavLink to="/enquiries" className={({ isActive }) => isActive ? 'active' : ''}>
-          <EnquiryIcon size={22} />
-          <span>Enquiries</span>
-        </NavLink>
-        <NavLink to="/dealers" className={({ isActive }) => isActive ? 'active' : ''}>
-          <StoreIcon size={22} />
-          <span>Dealers</span>
-        </NavLink>
-        <a href="/marketplace" target="_blank" rel="noreferrer">
-          <MarketIcon size={22} />
-          <span>Market</span>
-        </a>
+        {role !== 'field_agent' && (
+          <NavLink to="/brokers" className={({ isActive }) => isActive ? 'active' : ''}>
+            <PeopleIcon size={22} />
+            <span>Brokers</span>
+          </NavLink>
+        )}
+        {role !== 'field_agent' && (
+          <NavLink to="/enquiries" className={({ isActive }) => isActive ? 'active' : ''}>
+            <EnquiryIcon size={22} />
+            <span>Enquiries</span>
+          </NavLink>
+        )}
+        {role !== 'field_agent' && (
+          <NavLink to="/dealers" className={({ isActive }) => isActive ? 'active' : ''}>
+            <StoreIcon size={22} />
+            <span>Dealers</span>
+          </NavLink>
+        )}
+        {role === 'field_agent' && (
+          <a href="/marketplace" target="_blank" rel="noreferrer">
+            <MarketIcon size={22} />
+            <span>Market</span>
+          </a>
+        )}
+        <button onClick={handleLogout}>
+          <LogoutIcon />
+          <span>Sign Out</span>
+        </button>
       </nav>
 
     </div>
